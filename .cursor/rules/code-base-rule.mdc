@@ -1,0 +1,174 @@
+# Quy Trình Chuẩn Dựng Base Project Java Spring Boot
+
+Dưới đây là quy trình chuẩn và cụ thể để dựng một base project Java Spring Boot mạnh mẽ, linh hoạt và dễ bảo trì, đáp ứng đầy đủ các tiêu chí về core, module hóa, hiệu suất, và kết nối đa CSDL.
+
+## I. Tổng Quan Kiến Trúc
+
+Kiến trúc tổng thể của project sẽ được xây dựng theo dạng **đa module (multi-module)** để đảm bảo sự tách biệt rõ ràng về chức năng và dễ dàng phát triển, bảo trì cũng như mở rộng sau này.
+
+**Cấu trúc thư mục gợi ý:**
+```plaintext
+my-app/
+├── pom.xml (Parent POM)
+├── my-app-core/       (Module Core)
+├── my-app-api/        (Module API - Web)
+├── my-app-service/    (Module Service - Business Logic)
+├── my-app-persistence/ (Module Persistence - Data Access)
+└── my-app-security/   (Module Security)
+```
+
+```plaintext
+my-app/  <-- THƯ MỤC GỐC (PROJECT CHA)
+│
+├── pom.xml  <-- File POM cha. KHÔNG có code ở đây.
+│
+├── my-app-core/  <-- Module con
+│   ├── src/main/java/...  <-- Mã nguồn của module Core nằm ở đây
+│   └── pom.xml
+│
+├── my-app-api/   <-- Module con
+│   ├── src/main/java/...  <-- Mã nguồn của module API nằm ở đây
+│   └── pom.xml
+│
+├── my-app-service/ <-- Module con
+│   ├── src/main/java/...  <-- Mã nguồn của module Service nằm ở đây
+│   └── pom.xml
+│
+└── ... (các module khác)
+```
+
+---
+
+## II. Bước 1: Khởi tạo Project Đa Module
+
+Sử dụng **Spring Initializr** để tạo project cha và sau đó thêm các module con.
+
+1.  **Tạo các Module con:**
+    *   Tạo các module con (`my-app-core`, `my-app-api`, v.v.) dưới dạng các Maven module.
+    *   Đảm bảo các module con kế thừa từ project cha trong file `pom.xml` của chúng.
+
+---
+
+## III. Bước 2: Xây dựng Module `core` - Nền tảng chung
+
+Module này chứa các thành phần dùng chung, được thiết kế để dễ dàng mở rộng và bảo trì.
+
+### 1. Logging
+
+Sử dụng **SLF4J** làm facade và **Logback** (mặc định) làm implementation.
+
+*   **Cấu hình:** Tạo file `logback-spring.xml` trong `src/main/resources` của module `core`.
+    *   Định nghĩa các appender khác nhau: console, file, logstash (ELK Stack).
+    *   Cấu hình log theo từng profile (dev, staging, prod).
+    *   Sử dụng AOP (`@Aspect`) để tự động log khi vào/ra một phương thức.
+*   **Thực tiễn tốt nhất:**
+    *   Sử dụng logging có cấu trúc (JSON format) để dễ phân tích.
+    *   Log đầy đủ thông tin ngữ cảnh (request ID, user ID).
+    *   Sử dụng logging bất đồng bộ (`AsyncAppender`) để cải thiện hiệu suất.
+
+### 2. Exception Handling
+
+Xây dựng cơ chế xử lý ngoại lệ tập trung để đảm bảo phản hồi lỗi nhất quán.
+
+*   **Global Exception Handler:** Tạo một class với annotation `@ControllerAdvice`.
+    *   Sử dụng các phương thức `@ExceptionHandler` để xử lý các loại exception cụ thể.
+    *   Trả về một cấu trúc JSON lỗi thống nhất.
+*   **Custom Exceptions:** Định nghĩa các lớp exception tùy chỉnh (`ResourceNotFoundException`, `InvalidInputException`) kế thừa từ `RuntimeException` để thể hiện các lỗi nghiệp vụ.
+*   **Logging:** Log đầy đủ stack trace của exception ở phía server nhưng không để lộ ra cho client.
+
+### 3. Utils
+
+Tập hợp các lớp tiện ích không thuộc logic nghiệp vụ cụ thể.
+*   `DateUtils`: Xử lý ngày tháng.
+*   `StringUtils`: Xử lý chuỗi.
+*   `JsonUtils`: Xử lý JSON (sử dụng Jackson hoặc Gson).
+
+### 4. Config
+
+Quản lý cấu hình ứng dụng một cách linh hoạt.
+
+*   **Externalized Configuration:** Sử dụng `application.yml` (hoặc `.properties`) với các profile (`application-dev.yml`, `application-prod.yml`).
+*   **Type-Safe Configuration:** Sử dụng `@ConfigurationProperties` để liên kết các thuộc tính cấu hình với các đối tượng Java (POJO), thay vì dùng `@Value`.
+
+---
+
+## IV. Bước 3: Module hoá các tầng ứng dụng
+
+### 1. Module `persistence`
+
+Chịu trách nhiệm truy cập và thao tác với dữ liệu.
+
+*   **Cấu trúc:**
+    *   `entities`/`domain`: Chứa các class được đánh dấu `@Entity`.
+    *   `repositories`: Chứa các interface kế thừa từ `JpaRepository`.
+*   **Nguyên tắc:** Chỉ chứa logic liên quan đến dữ liệu, không chứa business logic.
+
+### 2. Module `service`
+
+Chứa toàn bộ logic nghiệp vụ (business logic).
+
+*   **Cấu trúc:**
+    *   `services`: Chứa các interface định nghĩa chức năng nghiệp vụ.
+    *   `services.impl`: Chứa các lớp triển khai.
+*   **Giao dịch (Transactions):** Sử dụng `@Transactional` ở cấp độ service.
+*   **Nguyên tắc:** Gọi đến module `persistence` để thao tác dữ liệu, không biết về lớp API.
+
+### 3. Module `api`
+
+Cửa ngõ của ứng dụng, xử lý request/response.
+
+*   **Cấu trúc:**
+    *   `controllers`: Chứa các REST controller.
+    *   `dtos` (Data Transfer Objects): Các đối tượng dùng để truyền dữ liệu giữa client và server.
+    *   `mappers`: Các lớp chuyển đổi giữa DTO và Entity.
+*   **Validation:** Sử dụng Bean Validation (`@Valid`) để kiểm tra dữ liệu đầu vào.
+
+### 4. Module `security`
+
+Chịu trách nhiệm xác thực (authentication) và phân quyền (authorization).
+
+*   **Công nghệ:** Tích hợp **Spring Security**.
+*   **Xác thực:** Sử dụng **JWT (JSON Web Tokens)** cho RESTful API.
+*   **Phân quyền:** Sử dụng `@PreAuthorize` để kiểm soát quyền truy cập dựa trên vai trò.
+*   **Thực tiễn tốt nhất:**
+    *   Luôn dùng HTTPS trong môi trường production.
+    *   Bảo vệ chống lại tấn công CSRF, XSS.
+    *   Mã hóa mật khẩu bằng BCrypt.
+
+---
+
+## V. Bước 4: Tối ưu hiệu suất
+
+*   **Cache:**
+    *   Sử dụng Spring's Cache Abstraction (`@EnableCaching`, `@Cacheable`, `@CacheEvict`).
+    *   Tích hợp với **Caffeine** (in-memory) hoặc **Redis** (distributed cache).
+*   **Asynchronous Processing:**
+    *   Sử dụng `@Async` cho các tác vụ tốn thời gian không cần chờ kết quả ngay (gửi email, xử lý log).
+*   **Connection Pool:**
+    *   Spring Boot mặc định dùng **HikariCP**. Tinh chỉnh các thông số trong `application.yml` (`maximum-pool-size`, `connection-timeout`).
+*   **Monitoring và Profiling:**
+    *   **Monitoring:** Tích hợp **Spring Boot Actuator**, **Micrometer**, **Prometheus**, và **Grafana**.
+    *   **Profiling:** Sử dụng **VisualVM** hoặc **JProfiler** để tìm kiếm các điểm nghẽn (bottlenecks).
+
+---
+
+## VI. Bước 5: Kết nối đa cơ sở dữ liệu
+
+*   **MySQL, PostGreSql, SQL (Multiple Relational Databases):**
+    *   Định nghĩa nhiều `DataSource` trong `application.yml` với các prefix khác nhau.
+    *   Tạo các lớp cấu hình riêng biệt cho mỗi `DataSource`, `EntityManagerFactory`, và `TransactionManager`.
+*   **NoSQL (ví dụ: MongoDB):**
+    *   Thêm dependency `spring-boot-starter-data-mongodb`.
+    *   Cấu hình thông tin kết nối và tạo các `MongoRepository`.
+*   **Cache (ví dụ: Redis):**
+    *   Thêm `spring-boot-starter-data-redis`.
+    *   Cấu hình kết nối Redis để làm cache, message broker, hoặc primary database.
+
+---
+
+## VII. Bước 6: Đảm bảo Core Module dễ mở rộng và bảo trì
+
+*   **Lập trình theo Interface:** Luôn định nghĩa interface cho service và inject interface thay vì implementation.
+*   **Constructor Injection:** Ưu tiên dùng constructor injection để làm rõ các dependency và dễ viết unit test.
+*   **Sử dụng BOM (Bill of Materials):** Tạo một custom BOM trong project cha để quản lý phiên bản của tất cả các dependency, đảm bảo tính nhất quán.
+*   **Tuân thủ nguyên tắc SOLID:** Áp dụng các nguyên tắc SOLID để xây dựng các thành phần có tính gắn kết cao và khớp nối lỏng.
