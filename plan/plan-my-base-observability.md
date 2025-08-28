@@ -7,8 +7,9 @@
 
 ## 2. Kiến trúc/Thiết kế tổng quan (Overview)
 
-- Kiểu: `jar` optional. Phụ thuộc: `spring-boot-starter-actuator`, `micrometer-core`, `micrometer-registry-prometheus`, `micrometer-tracing`.
-- Cung cấp: cấu hình mặc định cho actuator và micrometer qua starter; module này chứa constants/properties và helpers.
+- Kiểu: `jar` optional (pure library: helpers/constants/properties). Wiring được thực hiện ở `my-base-starter`.
+- Phụ thuộc: `micrometer-core` (library), không kéo `actuator`/registry trong lib. Ở starter: `spring-boot-starter-actuator`, `micrometer-registry-prometheus`, `micrometer-tracing-bridge-otel`, `opentelemetry-exporter-otlp`.
+- Cung cấp: conventions/metrics names/helpers; auto-configuration, health indicators, registry selection nằm ở starter.
 
 ### Observability Components
 - **Health Checks**: Application health, dependencies, custom health indicators
@@ -55,33 +56,10 @@ graph TB
 
 ```xml
 <dependencies>
-  <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-actuator</artifactId>
-  </dependency>
+  <!-- Library: keep minimal -->
   <dependency>
     <groupId>io.micrometer</groupId>
     <artifactId>micrometer-core</artifactId>
-  </dependency>
-  <dependency>
-    <groupId>io.micrometer</groupId>
-    <artifactId>micrometer-registry-prometheus</artifactId>
-    <optional>true</optional>
-  </dependency>
-  <dependency>
-    <groupId>io.micrometer</groupId>
-    <artifactId>micrometer-tracing-bridge-brave</artifactId>
-    <optional>true</optional>
-  </dependency>
-  <dependency>
-    <groupId>io.zipkin.brave</groupId>
-    <artifactId>brave</artifactId>
-    <optional>true</optional>
-  </dependency>
-  <dependency>
-    <groupId>net.logstash.logback</groupId>
-    <artifactId>logstash-logback-encoder</artifactId>
-    <optional>true</optional>
   </dependency>
 </dependencies>
 ```
@@ -183,35 +161,14 @@ public class BusinessMetricsCollector {
 }
 ```
 
-4) Distributed Tracing Configuration
+4) Distributed Tracing Configuration (ở starter, ưu tiên OpenTelemetry)
 
 ```java
-@Configuration
-public class TracingConfiguration {
-    
-    @Bean
-    public Sender sender() {
-        return OkHttpSender.create("http://zipkin:9411/api/v2/spans");
-    }
-    
-    @Bean
-    public AsyncReporter<Span> spanReporter() {
-        return AsyncReporter.create(sender());
-    }
-    
-    @Bean
-    public Tracing tracing() {
-        return Tracing.newBuilder()
-            .localServiceName("my-service")
-            .spanReporter(spanReporter())
-            .sampler(Sampler.create(0.1f)) // 10% sampling
-            .build();
-    }
-    
-    @Bean
-    public Tracer tracer() {
-        return tracing().tracer();
-    }
+@AutoConfiguration
+@ConditionalOnClass(name = "io.opentelemetry.api.trace.Tracer")
+@ConditionalOnProperty(prefix = "base.observability.tracing", name = "enabled", havingValue = "true", matchIfMissing = true)
+public class OTelTracingAutoConfiguration {
+    // Micrometer Tracing picks up OTel SDK/OTLP exporter on classpath; usually no custom beans required
 }
 ```
 
@@ -252,7 +209,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: "health,info,prometheus,metrics,tracing"
+        include: "health,info,metrics,prometheus"
   endpoint:
     health:
       show-details: when_authorized
@@ -281,6 +238,9 @@ management:
   tracing:
     sampling:
       probability: 0.1
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://otel-collector:4317}
 ```
 
 ## 4. Cấu hình (Configuration)
@@ -306,17 +266,15 @@ base:
             summary: "High error rate detected"
 ```
 
-### 4.2 Distributed Tracing Configuration
+### 4.2 Distributed Tracing Configuration (OTLP)
 ```yaml
 base:
   observability:
     tracing:
       enabled: true
       sampling-probability: 0.1
-      zipkin:
-        endpoint: http://zipkin:9411/api/v2/spans
-      jaeger:
-        endpoint: http://jaeger:14268/api/traces
+      otlp:
+        endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://otel-collector:4317}
       correlation:
         enabled: true
         header-name: X-Correlation-ID
@@ -385,10 +343,7 @@ curl http://localhost:8080/actuator/metrics/orders.processing.time
 
 ### 5.3 Tracing Testing
 ```bash
-# Check tracing endpoint
-curl http://localhost:8080/actuator/tracing
-
-# Test with correlation ID
+# Test with correlation ID header flowing through traces/logs
 curl -H "X-Correlation-ID: test-123" http://localhost:8080/api/test
 ```
 

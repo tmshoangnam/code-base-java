@@ -7,8 +7,9 @@
 
 ## 2. Kiến trúc/Thiết kế tổng quan (Overview)
 
-- Kiểu: `jar` (library). Phụ thuộc: `spring-boot-starter-security`, JWT lib (jjwt hoặc nimbus-jose-jwt, quản lý bởi BOM).
-- Cung cấp building blocks: providers, verifiers, principal, filters và helpers. Không tự đăng ký `SecurityFilterChain` ở module này.
+- Kiểu: `jar` (pure library). KHÔNG khai báo Spring bean/filter chain trong module này.
+- Phụ thuộc: JWT lib ưu tiên `nimbus-jose-jwt` (hoặc `spring-security-oauth2-jose`), các contracts/helpers. Spring Security và wiring để starter quản lý.
+- Cung cấp building blocks: token verifier interfaces, principal model, claim mappers, rate limit contracts; `SecurityFilterChain` sẽ được định nghĩa ở starter.
 
 ### Security Components
 - **Authentication**: JWT token validation, key rotation, clock skew handling
@@ -40,97 +41,58 @@ sequenceDiagram
 
 ## 3. Các bước setup chi tiết (Step-by-step Setup)
 
-1) POM và dependencies (trong `my-base-security`):
+1) POM và dependencies (trong `my-base-security`, tối ưu cho library):
 
 ```xml
 <dependencies>
   <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-security</artifactId>
-  </dependency>
-  <dependency>
-    <groupId>io.jsonwebtoken</groupId>
-    <artifactId>jjwt-api</artifactId>
-  </dependency>
-  <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-validation</artifactId>
-  </dependency>
-  <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-actuator</artifactId>
-  </dependency>
-  <dependency>
-    <groupId>io.github.bucket4j</groupId>
-    <artifactId>bucket4j-core</artifactId>
+    <groupId>com.nimbusds</groupId>
+    <artifactId>nimbus-jose-jwt</artifactId>
   </dependency>
   <dependency>
     <groupId>org.owasp.encoder</groupId>
     <artifactId>encoder</artifactId>
   </dependency>
-  <!-- chọn jjwt-impl + jjwt-jackson ở runtime trong app hoặc starter -->
+  <dependency>
+    <groupId>io.github.bucket4j</groupId>
+    <artifactId>bucket4j-core</artifactId>
+  </dependency>
 </dependencies>
 ```
 
-2) Key Rotation Implementation
+2) Key Rotation/JWKS Resolution (contracts, không phụ thuộc Spring)
 
 ```java
-@Component
-public class JwtKeyRotationService {
-    
-    private final Map<String, PublicKey> publicKeys = new ConcurrentHashMap<>();
-    private final AtomicReference<String> currentKeyId = new AtomicReference<>();
-    
-    @Scheduled(fixedRate = 3600000) // 1 hour
-    public void rotateKeys() {
-        // Implement key rotation logic
-        String newKeyId = generateNewKeyId();
-        PublicKey newKey = generateNewKey();
-        
-        publicKeys.put(newKeyId, newKey);
-        currentKeyId.set(newKeyId);
-        
-        // Remove old keys after grace period
-        cleanupOldKeys();
-    }
-    
-    public PublicKey getCurrentKey() {
-        return publicKeys.get(currentKeyId.get());
-    }
-    
-    public PublicKey getKeyById(String keyId) {
-        return publicKeys.get(keyId);
-    }
+public interface JwksResolver {
+    Optional<RSAKey> resolveByKeyId(String kid);
+    Duration getCacheTtl();
+}
+
+public final class RemoteJwksResolver implements JwksResolver {
+    private final URI jwksUri;
+    private final Duration cacheTtl;
+    private volatile JWKSet cachedSet;
+
+    public RemoteJwksResolver(URI jwksUri, Duration cacheTtl) { this.jwksUri = jwksUri; this.cacheTtl = cacheTtl; }
+    public Optional<RSAKey> resolveByKeyId(String kid) { /* fetch & cache JWKS, then find by kid */ return Optional.empty(); }
+    public Duration getCacheTtl() { return cacheTtl; }
 }
 ```
 
-3) Rate Limiting Implementation
+3) Rate Limiting Contracts (library) và triển khai phân tán ở starter
 
 ```java
-@Component
-public class RateLimitingService {
-    
-    private final Map<String, Bucket> buckets = new ConcurrentHashMap<>();
-    
-    public boolean isAllowed(String identifier, int requests, Duration duration) {
-        Bucket bucket = buckets.computeIfAbsent(identifier, 
-            k -> Bucket4j.builder()
-                .addLimit(Bandwidth.classic(requests, Refill.intervally(requests, duration)))
-                .build());
-        
-        return bucket.tryConsume(1);
-    }
-    
-    public void resetBucket(String identifier) {
-        buckets.remove(identifier);
-    }
+public interface RateLimiterService {
+    boolean isAllowed(String key, int requests, Duration window);
+    void reset(String key);
 }
+
+// Ở starter: triển khai Redis/Bucket4j-distributed để hỗ trợ multi-instance.
 ```
 
-4) Input Validation & Sanitization
+4) Input Validation & Sanitization (library utility)
 
 ```java
-@Component
 public class InputSanitizer {
     
     public String sanitizeHtml(String input) {
@@ -152,68 +114,66 @@ public class InputSanitizer {
 }
 ```
 
-5) Audit Logging
+5) Audit Logging (library)
 
 ```java
-@Component
-public class SecurityAuditLogger {
+public final class SecurityAuditLogger {
     
     private static final Logger auditLogger = LoggerFactory.getLogger("SECURITY_AUDIT");
     
-    public void logAuthenticationSuccess(String userId, String ipAddress) {
+    public static void logAuthenticationSuccess(String userId, String ipAddress) {
         auditLogger.info("Authentication success: userId={}, ip={}, timestamp={}", 
             userId, ipAddress, Instant.now());
     }
     
-    public void logAuthenticationFailure(String userId, String ipAddress, String reason) {
+    public static void logAuthenticationFailure(String userId, String ipAddress, String reason) {
         auditLogger.warn("Authentication failure: userId={}, ip={}, reason={}, timestamp={}", 
             userId, ipAddress, reason, Instant.now());
     }
     
-    public void logAuthorizationFailure(String userId, String resource, String action) {
+    public static void logAuthorizationFailure(String userId, String resource, String action) {
         auditLogger.warn("Authorization failure: userId={}, resource={}, action={}, timestamp={}", 
             userId, resource, action, Instant.now());
     }
 }
 ```
 
-6) Enhanced Security Filter Chain (ở app hoặc starter):
+6) Enhanced Security Filter Chain (ở starter): Nimbus + JWKS + headers + rate limit (Redis)
 
 ```java
 @Bean
-SecurityFilterChain securityFilterChain(HttpSecurity http, 
+SecurityFilterChain securityFilterChain(HttpSecurity http,
                                        JwtAuthenticationFilter jwtFilter,
                                        RateLimitingFilter rateLimitingFilter) throws Exception {
-  return http.csrf(csrf -> csrf.disable())
-    .headers(headers -> headers
-        .contentSecurityPolicy("default-src 'self'")
-        .frameOptions().deny()
-        .httpStrictTransportSecurity(hstsConfig -> hstsConfig
-            .maxAgeInSeconds(31536000)
-            .includeSubdomains(true)))
+  return http
+    .csrf(AbstractHttpConfigurer::disable)
+    .headers(h -> h
+      .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))
+      .frameOptions(FrameOptionsConfig::deny)
+      .httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(true).maxAgeInSeconds(31536000)))
     .authorizeHttpRequests(reg -> reg
-        .requestMatchers("/health", "/actuator/health").permitAll()
-        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-        .anyRequest().authenticated())
+      .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+      .requestMatchers("/api/admin/**").hasRole("ADMIN")
+      .anyRequest().authenticated())
     .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
     .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
     .exceptionHandling(ex -> ex
-        .authenticationEntryPoint(customAuthenticationEntryPoint())
-        .accessDeniedHandler(customAccessDeniedHandler()))
+      .authenticationEntryPoint(customAuthenticationEntryPoint())
+      .accessDeniedHandler(customAccessDeniedHandler()))
     .build();
 }
 ```
 
 ## 4. Cấu hình (Configuration)
 
-### 4.1 JWT Configuration
+### 4.1 JWT Configuration (JWKS + Nimbus)
 ```yaml
 base:
   security:
     jwt:
       issuer: mycorp
       audience: myapps
-      public-key-pem: ${JWT_PUBLIC_PEM}
+      jwks-uri: ${JWT_JWKS_URI}
       clock-skew-seconds: 60
       key-rotation:
         enabled: true
@@ -227,7 +187,7 @@ base:
         validate-not-before: true
 ```
 
-### 4.2 Rate Limiting Configuration
+### 4.2 Rate Limiting Configuration (distributed)
 ```yaml
 base:
   security:
@@ -235,6 +195,7 @@ base:
       enabled: true
       default-limit: 100
       default-window: 1m
+      backend: redis
       limits:
         login:
           requests: 5
@@ -326,7 +287,7 @@ void shouldPreventSQLInjection() {
 }
 ```
 
-### 5.3 Integration Testing
+### 5.3 Integration Testing (starter wiring)
 ```java
 @SpringBootTest
 @TestPropertySource(properties = {

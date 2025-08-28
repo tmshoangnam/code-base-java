@@ -7,7 +7,9 @@
 ## 2. Kiến trúc/Thiết kế tổng quan (Overview)
 
 - Kiểu: `jar` (starter). Phụ thuộc: `my-base-core`, `my-base-security`, `my-base-cache`, `my-base-observability`, `spring-boot-autoconfigure`.
-- Chứa: các lớp `@Configuration` có điều kiện, `AutoConfiguration.imports`, metadata cho properties.
+- Chứa: các lớp `@AutoConfiguration` có điều kiện, `AutoConfiguration.imports`, metadata cho properties.
+- Phân tách rõ: libraries (core/security/cache/observability) KHÔNG khai báo bean; starter chịu trách nhiệm wiring auto-config.
+- Tracing/metrics dùng Micrometer + OpenTelemetry (OTLP) khi có trên classpath.
 
 ### Starter Components
 - **Core Auto-configuration**: Error handling, resilience, logging, validation
@@ -88,9 +90,10 @@ graph TB
 2) Core Auto-configuration
 
 ```java
-@Configuration
+@AutoConfiguration
 @ConditionalOnClass(name = "org.springframework.boot.SpringApplication")
 @EnableConfigurationProperties({CoreProperties.class, ResilienceProperties.class})
+@ConditionalOnProperty(prefix = "base", name = "enabled", havingValue = "true", matchIfMissing = true)
 @ConditionalOnProperty(prefix = "base.core", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class CoreAutoConfiguration {
   
@@ -102,14 +105,15 @@ public class CoreAutoConfiguration {
   
   @Bean
   @ConditionalOnMissingBean
-  public GlobalExceptionHandler globalExceptionHandler() {
-    return new GlobalExceptionHandler();
+  public StructuredLogger structuredLogger() {
+    return new StructuredLogger();
   }
   
   @Bean
+  @ConditionalOnWebApplication
   @ConditionalOnMissingBean
-  public StructuredLogger structuredLogger() {
-    return new StructuredLogger();
+  public GlobalExceptionHandler globalExceptionHandler() {
+    return new GlobalExceptionHandler();
   }
 }
 ```
@@ -117,9 +121,11 @@ public class CoreAutoConfiguration {
 3) Security Auto-configuration
 
 ```java
-@Configuration
+@AutoConfiguration
+@ConditionalOnWebApplication
 @ConditionalOnClass(name = "org.springframework.security.config.annotation.web.configuration.EnableWebSecurity")
 @EnableConfigurationProperties(SecurityProperties.class)
+@ConditionalOnProperty(prefix = "base", name = "enabled", havingValue = "true", matchIfMissing = true)
 @ConditionalOnProperty(prefix = "base.security", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class SecurityAutoConfiguration {
   
@@ -146,9 +152,10 @@ public class SecurityAutoConfiguration {
 4) Cache Auto-configuration
 
 ```java
-@Configuration
+@AutoConfiguration
 @ConditionalOnClass(name = "org.springframework.cache.CacheManager")
 @EnableConfigurationProperties(CacheProperties.class)
+@ConditionalOnProperty(prefix = "base", name = "enabled", havingValue = "true", matchIfMissing = true)
 @ConditionalOnProperty(prefix = "base.cache", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class CacheAutoConfiguration {
   
@@ -179,9 +186,10 @@ public class CacheAutoConfiguration {
 5) Observability Auto-configuration
 
 ```java
-@Configuration
+@AutoConfiguration
 @ConditionalOnClass(name = "org.springframework.boot.actuate.health.HealthIndicator")
 @EnableConfigurationProperties(ObservabilityProperties.class)
+@ConditionalOnProperty(prefix = "base", name = "enabled", havingValue = "true", matchIfMissing = true)
 @ConditionalOnProperty(prefix = "base.observability", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class ObservabilityAutoConfiguration {
   
@@ -198,13 +206,23 @@ public class ObservabilityAutoConfiguration {
   }
   
   @Bean
-  @ConditionalOnClass(name = "brave.Tracing")
+  @ConditionalOnClass(name = "io.opentelemetry.api.trace.Tracer")
   @ConditionalOnProperty(prefix = "base.observability.tracing", name = "enabled", havingValue = "true")
   @ConditionalOnMissingBean
-  public TracingConfiguration tracingConfiguration() {
-    return new TracingConfiguration();
+  public OTelTracingConfiguration otelTracingConfiguration() {
+    return new OTelTracingConfiguration();
   }
 }
+```
+
+6) Thứ tự auto-configuration
+
+```java
+@AutoConfiguration(after = {org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration.class})
+public class ObservabilityAutoConfiguration { /* ... */ }
+
+@AutoConfiguration(after = {org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration.class})
+public class CacheAutoConfiguration { /* ... */ }
 ```
 
 6) Đăng ký imports
@@ -220,6 +238,7 @@ com.mycompany.base.autoconfig.CoreAutoConfiguration
 com.mycompany.base.autoconfig.SecurityAutoConfiguration
 com.mycompany.base.autoconfig.CacheAutoConfiguration
 com.mycompany.base.autoconfig.ObservabilityAutoConfiguration
+com.mycompany.base.autoconfig.OTelTracingAutoConfiguration
 ```
 
 7) Configuration Metadata
@@ -229,6 +248,12 @@ com.mycompany.base.autoconfig.ObservabilityAutoConfiguration
 ```json
 {
   "properties": [
+    {
+      "name": "base.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Master switch to enable all base auto-configurations",
+      "defaultValue": true
+    },
     {
       "name": "base.core.enabled",
       "type": "java.lang.Boolean",
@@ -297,6 +322,12 @@ base:
 @ConditionalOnProperty(prefix = "base.observability", name = "enabled", matchIfMissing = true)
 ```
 
+Thêm điều kiện master switch ở tất cả module:
+
+```java
+@ConditionalOnProperty(prefix = "base", name = "enabled", havingValue = "true", matchIfMissing = true)
+```
+
 ### 4.4 Bean Override Protection
 - Luôn dùng `@ConditionalOnMissingBean` để không override bean của ứng dụng.
 - Applications có thể override bất kỳ bean nào bằng cách định nghĩa bean với cùng tên.
@@ -306,34 +337,33 @@ base:
 
 ### 5.1 Auto-configuration Testing
 ```java
-@SpringBootTest
 class StarterAutoConfigurationTest {
-    
-    @Test
-    void shouldLoadCoreAutoConfiguration() {
-        assertThat(applicationContext.getBean(ProblemDetailMapper.class)).isNotNull();
-        assertThat(applicationContext.getBean(GlobalExceptionHandler.class)).isNotNull();
-        assertThat(applicationContext.getBean(StructuredLogger.class)).isNotNull();
-    }
-    
-    @Test
-    void shouldLoadSecurityAutoConfiguration() {
-        assertThat(applicationContext.getBean(JwtAuthenticationFilter.class)).isNotNull();
-        assertThat(applicationContext.getBean(RateLimitingFilter.class)).isNotNull();
-        assertThat(applicationContext.getBean(SecurityAuditLogger.class)).isNotNull();
-    }
-    
-    @Test
-    void shouldLoadCacheAutoConfiguration() {
-        assertThat(applicationContext.getBean(CacheManager.class)).isNotNull();
-        assertThat(applicationContext.getBean(CacheWarmingService.class)).isNotNull();
-    }
-    
-    @Test
-    void shouldLoadObservabilityAutoConfiguration() {
-        assertThat(applicationContext.getBean(DatabaseHealthIndicator.class)).isNotNull();
-        assertThat(applicationContext.getBean(BusinessMetricsCollector.class)).isNotNull();
-    }
+  private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
+      .withConfiguration(AutoConfigurations.of(
+          CoreAutoConfiguration.class,
+          SecurityAutoConfiguration.class,
+          CacheAutoConfiguration.class,
+          ObservabilityAutoConfiguration.class,
+          OTelTracingAutoConfiguration.class))
+      .withPropertyValues(
+          "base.enabled=true",
+          "base.core.enabled=true",
+          "base.security.enabled=true",
+          "base.cache.enabled=true",
+          "base.observability.enabled=true");
+
+  @Test
+  void shouldLoadCoreAutoConfiguration() {
+    contextRunner.run(ctx -> {
+      assertThat(ctx).hasSingleBean(ProblemDetailMapper.class);
+      assertThat(ctx).hasSingleBean(StructuredLogger.class);
+    });
+  }
+
+  @Test
+  void shouldLoadCacheAutoConfiguration() {
+    contextRunner.run(ctx -> assertThat(ctx).hasSingleBean(CacheWarmingService.class));
+  }
 }
 ```
 
@@ -452,4 +482,12 @@ void shouldLoadQuickly() {
 - **Spring Boot Actuator**: Management endpoints, health checks, metrics
 - **Spring Boot Testing**: Auto-configuration testing, conditional testing
 - **Spring Boot Documentation**: Official documentation, guides, examples
+
+## 8. Cross-module Guidelines
+
+- ConfigurationProperties: định nghĩa per-domain, thêm validation và metadata; không đọc properties tại library.
+- Master switch: tất cả auto-config tuân theo `base.enabled=true` và `<module>.enabled`.
+- Bean override policy: mọi bean đều `@ConditionalOnMissingBean`; ưu tiên tên bean rõ ràng để app override dễ.
+- Ordering: sử dụng `@AutoConfiguration(after/before)` để tránh xung đột, đặc biệt với `DataSourceAutoConfiguration`, `CacheAutoConfiguration`, `SecurityAutoConfiguration`.
+- Web-only components: thêm `@ConditionalOnWebApplication` để không nạp trong batch/CLI.
 

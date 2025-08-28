@@ -7,8 +7,9 @@
 
 ## 2. Kiến trúc/Thiết kế tổng quan (Overview)
 
-- Kiểu: `jar` (library). Phụ thuộc: `spring-boot-starter-cache`, optional `spring-data-redis`, optional `caffeine`.
-- Cung cấp: `CacheKeyStrategy`, `CacheNames`, `CacheProperties`, serializers và helper.
+- Kiểu: `jar` (pure library). Library KHÔNG khai báo Spring bean; auto-config sẽ nằm ở `my-base-starter`.
+- Phụ thuộc trong library: optional `caffeine`, optional serializers; tránh kéo `spring-boot-starter-cache`/`spring-data-redis` trực tiếp (để starter quản lý).
+- Cung cấp: `CacheKeyStrategy`, `CacheNames`, contracts, serializers và helper. Starter sẽ wire `CacheManager`/backends.
 
 ### Cache Components
 - **Cache Abstraction**: Unified interface cho multiple backends
@@ -45,45 +46,27 @@ graph TB
 
 ## 3. Các bước setup chi tiết (Step-by-step Setup)
 
-1) POM và dependencies:
+1) POM và dependencies (library tối giản):
 
 ```xml
 <dependencies>
-  <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-cache</artifactId>
-  </dependency>
-  <!-- optional backends -->
-  <dependency>
-    <groupId>org.springframework.data</groupId>
-    <artifactId>spring-data-redis</artifactId>
-    <optional>true</optional>
-  </dependency>
+  <!-- optional backends kept optional in library -->
   <dependency>
     <groupId>com.github.ben-manes.caffeine</groupId>
     <artifactId>caffeine</artifactId>
     <optional>true</optional>
   </dependency>
   <dependency>
-    <groupId>io.lettuce</groupId>
-    <artifactId>lettuce-core</artifactId>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-databind</artifactId>
     <optional>true</optional>
-  </dependency>
-  <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-actuator</artifactId>
-  </dependency>
-  <dependency>
-    <groupId>io.micrometer</groupId>
-    <artifactId>micrometer-core</artifactId>
   </dependency>
 </dependencies>
 ```
 
-2) Advanced Cache Key Strategy
+2) Advanced Cache Key Strategy (no Spring annotations)
 
 ```java
-@Component
 public class CacheKeyStrategy {
     
     private final String appName;
@@ -108,42 +91,15 @@ public class CacheKeyStrategy {
 }
 ```
 
-3) Cache Warming Implementation
+3) Cache Warming Implementation (đặt ở starter)
 
 ```java
-@Component
-public class CacheWarmingService {
-    
-    @Autowired
-    private CacheManager cacheManager;
-    
-    @EventListener(ApplicationReadyEvent.class)
-    public void warmCaches() {
-        // Warm critical caches on startup
-        warmUserCache();
-        warmConfigurationCache();
-        warmReferenceDataCache();
-    }
-    
-    @Scheduled(fixedRate = 300000) // 5 minutes
-    public void refreshCaches() {
-        // Background refresh of frequently accessed data
-        refreshHotData();
-    }
-    
-    private void warmUserCache() {
-        Cache userCache = cacheManager.getCache("users");
-        // Preload frequently accessed users
-        List<User> hotUsers = userService.getHotUsers();
-        hotUsers.forEach(user -> userCache.put(user.getId(), user));
-    }
-}
+// Được triển khai trong starter: lắng nghe ApplicationReadyEvent/Scheduling và sử dụng CacheManager
 ```
 
-4) Multi-level Cache Implementation
+4) Multi-level Cache Implementation (no Spring annotations)
 
 ```java
-@Component
 public class MultiLevelCacheManager implements CacheManager {
     
     private final CacheManager localCacheManager;
@@ -183,16 +139,15 @@ public class MultiLevelCache implements Cache {
 }
 ```
 
-5) Performance Monitoring
+5) Performance Monitoring (ở starter)
 
 ```java
-@Component
 public class CacheMetricsCollector {
     
     private final MeterRegistry meterRegistry;
     private final Map<String, CacheStats> cacheStats = new ConcurrentHashMap<>();
     
-    @EventListener
+    // Đăng ký listeners ở starter, đẩy metrics qua Micrometer
     public void onCacheHit(CacheHitEvent event) {
         String cacheName = event.getCacheName();
         cacheStats.computeIfAbsent(cacheName, k -> new CacheStats())
@@ -201,7 +156,6 @@ public class CacheMetricsCollector {
         meterRegistry.counter("cache.hits", "cache", cacheName).increment();
     }
     
-    @EventListener
     public void onCacheMiss(CacheMissEvent event) {
         String cacheName = event.getCacheName();
         cacheStats.computeIfAbsent(cacheName, k -> new CacheStats())
@@ -210,7 +164,6 @@ public class CacheMetricsCollector {
         meterRegistry.counter("cache.misses", "cache", cacheName).increment();
     }
     
-    @Scheduled(fixedRate = 60000) // 1 minute
     public void reportMetrics() {
         cacheStats.forEach((cacheName, stats) -> {
             double hitRatio = stats.getHitRatio();
@@ -249,19 +202,19 @@ CacheManager redisCacheManager(RedisConnectionFactory cf, CacheProperties props)
 @ConditionalOnClass(com.github.benmanes.caffeine.cache.Cache.class)
 @ConditionalOnProperty(prefix = "base.cache", name = "type", havingValue = "caffeine")
 CacheManager caffeineCacheManager(CacheProperties props) {
-  CaffeineCacheManager cacheManager = new CaffeineCacheManager();
-  
-  props.getSpecs().forEach((cacheName, spec) -> {
-      Caffeine<Object, Object> caffeine = Caffeine.newBuilder()
-          .maximumSize(spec.getMaxSize())
-          .expireAfterWrite(Duration.ofSeconds(spec.getTtlSeconds()))
-          .recordStats();
-      
-      cacheManager.setCaffeine(caffeine);
+  CaffeineCacheManager manager = new CaffeineCacheManager();
+  manager.setCacheNames(props.getSpecs().keySet());
+  props.getSpecs().forEach((name, spec) -> {
+    Caffeine<Object, Object> builder = Caffeine.newBuilder()
+        .maximumSize(spec.getMaxSize())
+        .expireAfterWrite(Duration.ofSeconds(spec.getTtlSeconds()))
+        .recordStats();
+    manager.registerCustomCache(name, new CaffeineCache(name, builder.build()));
   });
-  
-  return cacheManager;
+  return manager;
 }
+
+// Lưu ý: để đồng bộ L1 invalidation khi L2 (Redis) thay đổi, dùng Redis pub/sub để broadcast thông điệp invalidate tới các nút → xoá key tương ứng trong L1.
 ```
 
 ## 4. Cấu hình (Configuration)

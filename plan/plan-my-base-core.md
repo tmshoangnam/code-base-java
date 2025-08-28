@@ -7,16 +7,16 @@
 
 ## 2. Kiến trúc/Thiết kế tổng quan (Overview)
 
-- Kiểu: `jar` thuần; publish như library.
-- Phụ thuộc chính: `spring-boot-starter`, `spring-boot-starter-validation`, `spring-boot-starter-logging`, `resilience4j-spring-boot3`, `micrometer-core`.
-- Expose các lớp tiện ích, contracts, DTOs; không tự khai báo `@Configuration`.
+- Kiểu: `jar` thuần (pure library); publish như library, KHÔNG định nghĩa bean Spring, KHÔNG `@Configuration`/`@ControllerAdvice`/`@Component`.
+- Phụ thuộc chính (tối thiểu, không kéo Actuator/Tracing): `spring-boot-starter-validation` (hoặc `jakarta.validation`), `slf4j-api`, `resilience4j-core`/`resilience4j-circuitbreaker`/`resilience4j-retry`.
+- Expose các lớp tiện ích, contracts, DTOs; wiring vào Spring context do `my-base-starter` đảm nhiệm.
 
 ### Core Components
-- **Resilience Layer**: Circuit breaker, retry, timeout, bulkhead patterns
-- **Error Handling**: Structured exceptions, error codes, recovery strategies  
-- **Logging**: Structured logging với correlation ID, MDC management
+- **Resilience Layer**: Contracts/utils cho circuit breaker, retry, timeout, bulkhead (không auto-register bean)
+- **Error Handling**: Exception hierarchy, error codes, ProblemDetail mapping contracts
+- **Logging**: Structured logging utilities (không đăng ký logger bean)
 - **Utilities**: Common helpers, validation, serialization
-- **Health Checks**: Application health indicators
+- (Health checks sẽ thuộc starter/observability — không nằm ở core)
 
 Sơ đồ kiến trúc tổng quan:
 
@@ -45,127 +45,82 @@ graph TB
 
 ## 3. Các bước setup chi tiết (Step-by-step Setup)
 
-1) POM và dependencies
+1) POM và dependencies (tham khảo)
 
 ```xml
 <dependencies>
   <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter</artifactId>
+    <groupId>org.slf4j</groupId>
+    <artifactId>slf4j-api</artifactId>
   </dependency>
   <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-validation</artifactId>
-  </dependency>
-  <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-logging</artifactId>
+    <groupId>jakarta.validation</groupId>
+    <artifactId>jakarta.validation-api</artifactId>
   </dependency>
   <dependency>
     <groupId>io.github.resilience4j</groupId>
-    <artifactId>resilience4j-spring-boot3</artifactId>
+    <artifactId>resilience4j-circuitbreaker</artifactId>
   </dependency>
   <dependency>
-    <groupId>io.micrometer</groupId>
-    <artifactId>micrometer-core</artifactId>
-  </dependency>
-  <dependency>
-    <groupId>io.micrometer</groupId>
-    <artifactId>micrometer-tracing-bridge-brave</artifactId>
-  </dependency>
-  <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-actuator</artifactId>
+    <groupId>io.github.resilience4j</groupId>
+    <artifactId>resilience4j-retry</artifactId>
   </dependency>
 </dependencies>
 ```
 
-2) Resilience Configuration
+2) Resilience Utilities (no Spring beans)
 
 ```java
-@Configuration
-@EnableConfigurationProperties(ResilienceProperties.class)
-public class ResilienceAutoConfiguration {
-    
-    @Bean
-    @ConditionalOnMissingBean
-    public CircuitBreakerRegistry circuitBreakerRegistry() {
+public final class ResilienceFactories {
+    private ResilienceFactories() {}
+
+    public static CircuitBreakerRegistry defaultCircuitBreakerRegistry() {
         return CircuitBreakerRegistry.ofDefaults();
     }
-    
-    @Bean
-    @ConditionalOnMissingBean
-    public RetryRegistry retryRegistry() {
+
+    public static RetryRegistry defaultRetryRegistry() {
         return RetryRegistry.ofDefaults();
     }
-    
-    @Bean
-    @ConditionalOnMissingBean
-    public TimeLimiterRegistry timeLimiterRegistry() {
+
+    public static TimeLimiterRegistry defaultTimeLimiterRegistry() {
         return TimeLimiterRegistry.ofDefaults();
     }
-    
-    @Bean
-    @ConditionalOnMissingBean
-    public BulkheadRegistry bulkheadRegistry() {
+
+    public static BulkheadRegistry defaultBulkheadRegistry() {
         return BulkheadRegistry.ofDefaults();
     }
 }
 ```
 
-3) Error Handling Implementation
+3) Error Handling Contracts (no Spring @ControllerAdvice)
 
 ```java
-@ControllerAdvice
-public class GlobalExceptionHandler {
-    
-    @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ProblemDetail> handleBusinessException(BusinessException ex) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
-            HttpStatus.BAD_REQUEST, ex.getMessage());
-        problemDetail.setTitle("Business Error");
-        problemDetail.setProperty("errorCode", ex.getErrorCode());
-        problemDetail.setProperty("correlationId", CorrelationIdHolder.get());
-        problemDetail.setProperty("timestamp", Instant.now());
-        return ResponseEntity.badRequest().body(problemDetail);
-    }
-    
-    @ExceptionHandler(ResilienceException.class)
-    public ResponseEntity<ProblemDetail> handleResilienceException(ResilienceException ex) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
-            HttpStatus.SERVICE_UNAVAILABLE, "Service temporarily unavailable");
-        problemDetail.setTitle("Service Unavailable");
-        problemDetail.setProperty("errorCode", "SERVICE_UNAVAILABLE");
-        problemDetail.setProperty("correlationId", CorrelationIdHolder.get());
-        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(problemDetail);
-    }
+public interface ProblemDetailMapper {
+    ProblemDetail mapBusiness(BusinessException ex, String correlationId);
+    ProblemDetail mapServiceUnavailable(Throwable ex, String correlationId);
 }
 ```
 
-4) Structured Logging Implementation
+4) Structured Logging Utilities (no Spring @Component)
 
 ```java
-@Component
-public class StructuredLogger {
-    
+public final class StructuredLogger {
     private static final Logger logger = LoggerFactory.getLogger(StructuredLogger.class);
-    
-    public void logBusinessEvent(String event, Map<String, Object> context) {
+
+    private StructuredLogger() {}
+
+    public static void logBusinessEvent(String correlationId, String event, Map<String, Object> context) {
         MDC.put("event", event);
-        MDC.put("correlationId", CorrelationIdHolder.get());
+        MDC.put("correlationId", correlationId);
         context.forEach((key, value) -> MDC.put(key, String.valueOf(value)));
-        
         logger.info("Business event: {}", event);
-        
-        // Clear MDC after logging
         MDC.clear();
     }
-    
-    public void logError(String message, Throwable throwable, Map<String, Object> context) {
+
+    public static void logError(String correlationId, String message, Throwable throwable, Map<String, Object> context) {
         MDC.put("error", "true");
-        MDC.put("correlationId", CorrelationIdHolder.get());
+        MDC.put("correlationId", correlationId);
         context.forEach((key, value) -> MDC.put(key, String.valueOf(value)));
-        
         logger.error(message, throwable);
         MDC.clear();
     }
@@ -174,41 +129,16 @@ public class StructuredLogger {
 
 5) Health Indicators
 
-```java
-@Component
-public class DatabaseHealthIndicator implements HealthIndicator {
-    
-    @Autowired
-    private DataSource dataSource;
-    
-    @Override
-    public Health health() {
-        try (Connection connection = dataSource.getConnection()) {
-            if (connection.isValid(1)) {
-                return Health.up()
-                    .withDetail("database", "Available")
-                    .withDetail("validationQuery", "SELECT 1")
-                    .build();
-            }
-        } catch (SQLException ex) {
-            return Health.down()
-                .withDetail("database", "Unavailable")
-                .withDetail("error", ex.getMessage())
-                .build();
-        }
-        return Health.down().withDetail("database", "Unknown error").build();
-    }
-}
-```
+- Không thuộc `my-base-core`. Các health indicators sẽ được định nghĩa và wiring trong `my-base-starter` (observability).
 
 6) Packaging và public API
 
-- Group theo package: `exception`, `logging`, `validation`, `util`, `model`, `resilience`, `health`.
+- Group theo package: `exception`, `logging`, `validation`, `util`, `model`, `resilience`.
 - Chỉ xuất public API ổn định; tránh `internal` bị dùng nhầm (đặt trong package `internal`).
 
 ## 4. Cấu hình (Configuration)
 
-### 4.1 Resilience Properties
+### 4.1 Resilience Properties (được bind ở starter)
 ```yaml
 base:
   core:
@@ -231,7 +161,7 @@ base:
         max-wait-duration: 1s
 ```
 
-### 4.2 Logging Configuration
+### 4.2 Logging Configuration (được bind ở starter)
 ```yaml
 base:
   core:
@@ -252,7 +182,7 @@ base:
         slow-query-threshold: 1000ms
 ```
 
-### 4.3 Error Handling Configuration
+### 4.3 Error Handling Configuration (được bind ở starter)
 ```yaml
 base:
   core:
@@ -267,7 +197,7 @@ base:
         include-path: true
 ```
 
-- Không khai báo `@Configuration` ở core; không thêm file `AutoConfiguration.imports` tại đây.
+- KHÔNG khai báo `@Configuration` ở core; không thêm file `AutoConfiguration.imports` tại đây.
 - Nếu cần tài nguyên (message bundles), đặt tại `src/main/resources` và tên không va chạm.
 
 ## 5. Cách kiểm thử/triển khai (Testing & Deployment)
@@ -296,19 +226,7 @@ class ResilienceServiceTest {
 ```
 
 ### 5.2 Integration Testing
-```java
-@SpringBootTest
-@TestPropertySource(properties = {
-    "base.core.resilience.circuit-breaker.failure-rate-threshold=100"
-})
-class ResilienceIntegrationTest {
-    
-    @Test
-    void shouldOpenCircuitBreakerAfterFailures() {
-        // Integration test with real circuit breaker
-    }
-}
-```
+- Các bài test tích hợp Spring context cho core nên đặt ở `my-base-starter` (auto-config tests bằng `ApplicationContextRunner`).
 
 ### 5.3 Performance Testing
 ```java
@@ -322,7 +240,7 @@ void shouldHandleHighLoad() {
 
 ### 5.4 Deployment
 - Unit test: JUnit5, AssertJ; chạy `mvn -pl my-base-core -am test`.
-- Integration test: Testcontainers cho external dependencies.
+- Integration test liên quan Spring đặt ở starter.
 - Mutation/coverage: Pitest, Jacoco với threshold 80%.
 - Deploy: theo parent, artifact `my-base-core` xuất bản như library.
 

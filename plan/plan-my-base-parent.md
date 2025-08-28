@@ -52,6 +52,24 @@ graph TD
       <plugins>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-enforcer-plugin</artifactId>
+          <version>3.4.1</version>
+          <executions>
+            <execution>
+              <id>enforce</id>
+              <goals><goal>enforce</goal></goals>
+              <configuration>
+                <rules>
+                  <DependencyConvergence/>
+                  <BanDuplicateClasses/>
+                </rules>
+                <fail>true</fail>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
           <version>3.2.5</version>
         </plugin>
@@ -59,6 +77,29 @@ graph TD
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-failsafe-plugin</artifactId>
           <version>3.2.5</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>3.4.2</version>
+          <configuration>
+            <archive>
+              <manifestEntries>
+                <Build-SourceEncoding>${project.build.sourceEncoding}</Build-SourceEncoding>
+              </manifestEntries>
+              <reproducible>true</reproducible>
+            </archive>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>io.github.zlika</groupId>
+          <artifactId>reproducible-build-maven-plugin</artifactId>
+          <version>0.16</version>
+          <executions>
+            <execution>
+              <goals><goal>strip-jar</goal></goals>
+            </execution>
+          </executions>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -158,7 +199,16 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: maven
-      - run: mvn -B -U -ntp clean verify
+      - name: Secret scan
+        uses: gitleaks/gitleaks-action@v2
+      - name: OWASP Dependency-Check
+        uses: dependency-check/Dependency-Check_Action@v4
+        with:
+          project: 'my-base'
+          path: '.'
+          format: 'HTML'
+      - name: Build
+        run: mvn -B -U -ntp clean verify
   deploy-snapshot:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
