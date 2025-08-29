@@ -14,46 +14,27 @@ public class ValidationException extends BaseException {
     private static final long serialVersionUID = 1L;
     
     public ValidationException(String message) {
-        super(new BaseException.Builder(message)
-                .errorCode("VALIDATION_ERROR")
-                .errorType("VALIDATION")
-                .errorCategory(ErrorCategory.VALIDATION)
-                .severity(ErrorSeverity.MEDIUM)
-                .userMessage("The provided data is invalid. Please check your input and try again.")
-                .build());
+        super(message, "VALIDATION_ERROR", "VALIDATION", ErrorCategory.VALIDATION, 
+              ErrorSeverity.MEDIUM, "The provided data is invalid. Please check your input and try again.", null);
     }
     
     public ValidationException(String message, Map<String, Object> validationContext) {
-        super(new BaseException.Builder(message)
-                .errorCode("VALIDATION_ERROR")
-                .errorType("VALIDATION")
-                .errorCategory(ErrorCategory.VALIDATION)
-                .severity(ErrorSeverity.MEDIUM)
-                .userMessage("The provided data is invalid. Please check your input and try again.")
-                .context(validationContext)
-                .build());
+        super(message, "VALIDATION_ERROR", "VALIDATION", ErrorCategory.VALIDATION, 
+              ErrorSeverity.MEDIUM, "The provided data is invalid. Please check your input and try again.", null);
+        if (validationContext != null) {
+            this.addContext(validationContext);
+        }
     }
     
     public ValidationException(String message, String field, Object value) {
-        super(new BaseException.Builder(message)
-                .errorCode("VALIDATION_ERROR")
-                .errorType("VALIDATION")
-                .errorCategory(ErrorCategory.VALIDATION)
-                .severity(ErrorSeverity.MEDIUM)
-                .userMessage("The field '" + field + "' contains invalid data.")
-                .context("field", field)
-                .context("value", value)
-                .build());
+        super(message, "VALIDATION_ERROR", "VALIDATION", ErrorCategory.VALIDATION, 
+              ErrorSeverity.MEDIUM, "The field '" + field + "' contains invalid data.", null);
+        this.addContext("field", field);
+        this.addContext("value", value);
     }
     
     public ValidationException(String message, Throwable cause) {
-        super(new BaseException.Builder(message)
-                .errorCode("VALIDATION_ERROR")
-                .errorType("VALIDATION")
-                .errorCategory(ErrorCategory.VALIDATION)
-                .severity(ErrorSeverity.MEDIUM)
-                .userMessage("The provided data is invalid. Please check your input and try again.")
-                .cause(cause)
-                .build());
+        super(message, "VALIDATION_ERROR", "VALIDATION", ErrorCategory.VALIDATION, 
+              ErrorSeverity.MEDIUM, "The provided data is invalid. Please check your input and try again.", cause);
     }
 }

@@ -1,4 +1,4 @@
-package com.mycompany.base.core.resilience;
+package com.mycompany.base.starter.resilience;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
@@ -133,10 +133,6 @@ public class ResilienceProperties {
     public static class Retry {
         private int maxAttempts = 3;
         private Duration waitDuration = Duration.ofMillis(100);
-        private Duration intervalFunction = Duration.ofMillis(100);
-        private boolean enableExponentialBackoff = false;
-        private double multiplier = 2.0;
-        private Duration maxWaitDuration = Duration.ofSeconds(10);
         
         public int getMaxAttempts() {
             return maxAttempts;
@@ -153,38 +149,6 @@ public class ResilienceProperties {
         public void setWaitDuration(Duration waitDuration) {
             this.waitDuration = waitDuration;
         }
-        
-        public Duration getIntervalFunction() {
-            return intervalFunction;
-        }
-        
-        public void setIntervalFunction(Duration intervalFunction) {
-            this.intervalFunction = intervalFunction;
-        }
-        
-        public boolean isEnableExponentialBackoff() {
-            return enableExponentialBackoff;
-        }
-        
-        public void setEnableExponentialBackoff(boolean enableExponentialBackoff) {
-            this.enableExponentialBackoff = enableExponentialBackoff;
-        }
-        
-        public double getMultiplier() {
-            return multiplier;
-        }
-        
-        public void setMultiplier(double multiplier) {
-            this.multiplier = multiplier;
-        }
-        
-        public Duration getMaxWaitDuration() {
-            return maxWaitDuration;
-        }
-        
-        public void setMaxWaitDuration(Duration maxWaitDuration) {
-            this.maxWaitDuration = maxWaitDuration;
-        }
     }
     
     /**
@@ -192,8 +156,7 @@ public class ResilienceProperties {
      */
     public static class Bulkhead {
         private int maxConcurrentCalls = 10;
-        private Duration maxWaitDuration = Duration.ofMillis(100);
-        private int maxConcurrentCallsPerThread = 5;
+        private Duration maxWaitDuration = Duration.ofMillis(500);
         
         public int getMaxConcurrentCalls() {
             return maxConcurrentCalls;
@@ -209,14 +172,6 @@ public class ResilienceProperties {
         
         public void setMaxWaitDuration(Duration maxWaitDuration) {
             this.maxWaitDuration = maxWaitDuration;
-        }
-        
-        public int getMaxConcurrentCallsPerThread() {
-            return maxConcurrentCallsPerThread;
-        }
-        
-        public void setMaxConcurrentCallsPerThread(int maxConcurrentCallsPerThread) {
-            this.maxConcurrentCallsPerThread = maxConcurrentCallsPerThread;
         }
     }
     

@@ -114,6 +114,21 @@ public class BaseException extends RuntimeException implements Serializable {
         this.technicalDetails = builder.technicalDetails;
     }
     
+    // Protected constructor for subclasses
+    protected BaseException(String message, String errorCode, String errorType, 
+                          ErrorCategory errorCategory, ErrorSeverity severity, 
+                          String userMessage, Throwable cause) {
+        super(message, cause);
+        this.errorCode = errorCode;
+        this.errorType = errorType;
+        this.errorCategory = errorCategory;
+        this.timestamp = Instant.now();
+        this.context = new HashMap<>();
+        this.severity = severity;
+        this.userMessage = userMessage;
+        this.technicalDetails = null;
+    }
+    
     // Getters
     public String getErrorCode() {
         return errorCode;

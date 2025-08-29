@@ -42,22 +42,30 @@ public final class ResilienceUtils {
     }
     
     /**
-     * Creates a circuit breaker with custom configuration properties.
+     * Creates a circuit breaker with custom configuration.
      * 
      * @param name the circuit breaker name
-     * @param properties the configuration properties
+     * @param failureRateThreshold failure rate threshold percentage
+     * @param waitDurationInOpenState wait duration in open state
+     * @param slidingWindowSize sliding window size
+     * @param minimumNumberOfCalls minimum number of calls
+     * @param slowCallDurationThreshold slow call duration threshold
+     * @param slowCallRateThreshold slow call rate threshold
+     * @param automaticTransitionFromOpenToHalfOpenEnabled automatic transition flag
      * @return configured circuit breaker
      */
-    public static CircuitBreaker createCircuitBreaker(String name, ResilienceProperties properties) {
+    public static CircuitBreaker createCircuitBreaker(String name, int failureRateThreshold, 
+                                                    Duration waitDurationInOpenState, int slidingWindowSize,
+                                                    int minimumNumberOfCalls, Duration slowCallDurationThreshold,
+                                                    int slowCallRateThreshold, boolean automaticTransitionFromOpenToHalfOpenEnabled) {
         CircuitBreakerConfig config = CircuitBreakerConfig.custom()
-                .failureRateThreshold(properties.getCircuitBreaker().getFailureRateThreshold())
-                .waitDurationInOpenState(properties.getCircuitBreaker().getWaitDurationInOpenState())
-                .slidingWindowSize(properties.getCircuitBreaker().getSlidingWindowSize())
-                .minimumNumberOfCalls(properties.getCircuitBreaker().getMinimumNumberOfCalls())
-                .slowCallDurationThreshold(properties.getCircuitBreaker().getSlowCallDurationThreshold())
-                .slowCallRateThreshold(properties.getCircuitBreaker().getSlowCallRateThreshold())
-                .automaticTransitionFromOpenToHalfOpenEnabled(
-                    properties.getCircuitBreaker().isAutomaticTransitionFromOpenToHalfOpenEnabled())
+                .failureRateThreshold(failureRateThreshold)
+                .waitDurationInOpenState(waitDurationInOpenState)
+                .slidingWindowSize(slidingWindowSize)
+                .minimumNumberOfCalls(minimumNumberOfCalls)
+                .slowCallDurationThreshold(slowCallDurationThreshold)
+                .slowCallRateThreshold(slowCallRateThreshold)
+                .automaticTransitionFromOpenToHalfOpenEnabled(automaticTransitionFromOpenToHalfOpenEnabled)
                 .build();
         
         return CircuitBreaker.of(name, config);
@@ -203,7 +211,8 @@ public final class ResilienceUtils {
      * @return the result
      */
     public static <T> T executeWithTimeLimiter(TimeLimiter timeLimiter, Supplier<T> supplier) {
-        return timeLimiter.executeSupplier(supplier);
+        Supplier<T> decorated = TimeLimiter.decorateSupplier(timeLimiter, supplier);
+        return decorated.get();
     }
     
     /**
@@ -222,11 +231,11 @@ public final class ResilienceUtils {
                                             Bulkhead bulkhead, 
                                             TimeLimiter timeLimiter, 
                                             Supplier<T> supplier) {
-        return circuitBreaker
-                .decorateSupplier(supplier)
-                .decorate(retry.decorateSupplier(supplier))
-                .decorate(bulkhead.decorateSupplier(supplier))
-                .decorate(timeLimiter.decorateSupplier(supplier))
-                .get();
+        Supplier<T> decorated = circuitBreaker
+                .decorateSupplier(supplier);
+        decorated = Retry.decorateSupplier(retry, decorated);
+        decorated = Bulkhead.decorateSupplier(bulkhead, decorated);
+        decorated = TimeLimiter.decorateSupplier(timeLimiter, decorated);
+        return decorated.get();
     }
 }
