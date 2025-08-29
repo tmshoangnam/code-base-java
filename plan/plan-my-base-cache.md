@@ -7,7 +7,7 @@
 
 ## 2. Kiến trúc/Thiết kế tổng quan (Overview)
 
-- Kiểu: `jar` (pure library). Library KHÔNG khai báo Spring bean; auto-config sẽ nằm ở `my-base-starter`.
+- Kiểu: `jar` (pure library). Library KHÔNG khai báo Spring bean; auto-config sẽ nằm ở `java-base-starter`.
 - Phụ thuộc trong library: optional `caffeine`, optional serializers; tránh kéo `spring-boot-starter-cache`/`spring-data-redis` trực tiếp (để starter quản lý).
 - Cung cấp: `CacheKeyStrategy`, `CacheNames`, contracts, serializers và helper. Starter sẽ wire `CacheManager`/backends.
 

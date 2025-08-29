@@ -9,7 +9,7 @@
 
 - Kiểu: `jar` thuần (pure library); publish như library, KHÔNG định nghĩa bean Spring, KHÔNG `@Configuration`/`@ControllerAdvice`/`@Component`.
 - Phụ thuộc chính (tối thiểu, không kéo Actuator/Tracing): `spring-boot-starter-validation` (hoặc `jakarta.validation`), `slf4j-api`, `resilience4j-core`/`resilience4j-circuitbreaker`/`resilience4j-retry`.
-- Expose các lớp tiện ích, contracts, DTOs; wiring vào Spring context do `my-base-starter` đảm nhiệm.
+- Expose các lớp tiện ích, contracts, DTOs; wiring vào Spring context do `java-base-starter` đảm nhiệm.
 
 ### Core Components
 - **Resilience Layer**: Contracts/utils cho circuit breaker, retry, timeout, bulkhead (không auto-register bean)
@@ -22,7 +22,7 @@ Sơ đồ kiến trúc tổng quan:
 
 ```mermaid
 graph TB
-  A[my-base-core] --> B[Resilience Layer]
+  A[java-base-core] --> B[Resilience Layer]
   A --> C[Error Handling]
   A --> D[Logging Framework]
   A --> E[Common Utilities]
@@ -129,7 +129,7 @@ public final class StructuredLogger {
 
 5) Health Indicators
 
-- Không thuộc `my-base-core`. Các health indicators sẽ được định nghĩa và wiring trong `my-base-starter` (observability).
+- Không thuộc `java-base-core`. Các health indicators sẽ được định nghĩa và wiring trong `java-base-starter` (observability).
 
 6) Packaging và public API
 
@@ -226,7 +226,7 @@ class ResilienceServiceTest {
 ```
 
 ### 5.2 Integration Testing
-- Các bài test tích hợp Spring context cho core nên đặt ở `my-base-starter` (auto-config tests bằng `ApplicationContextRunner`).
+- Các bài test tích hợp Spring context cho core nên đặt ở `java-base-starter` (auto-config tests bằng `ApplicationContextRunner`).
 
 ### 5.3 Performance Testing
 ```java
@@ -239,10 +239,10 @@ void shouldHandleHighLoad() {
 ```
 
 ### 5.4 Deployment
-- Unit test: JUnit5, AssertJ; chạy `mvn -pl my-base-core -am test`.
+- Unit test: JUnit5, AssertJ; chạy `mvn -pl java-base-core -am test`.
 - Integration test liên quan Spring đặt ở starter.
 - Mutation/coverage: Pitest, Jacoco với threshold 80%.
-- Deploy: theo parent, artifact `my-base-core` xuất bản như library.
+- Deploy: theo parent, artifact `java-base-core` xuất bản như library.
 
 ## 6. Lưu ý mở rộng/Best practices
 

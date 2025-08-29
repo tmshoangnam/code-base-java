@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter
+        xmlns="https://github.com/spotbugs/filter/3.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="https://github.com/spotbugs/filter/3.0.0 https://raw.githubusercontent.com/spotbugs/spotbugs/3.1.0/spotbugs/etc/findbugsfilter.xsd">
+
+    <!-- Exclude generated sources -->
+    <Match>
+        <Source name="~.*[/\\]target[/\\].*"/>
+    </Match>
+
+    <!-- Exclude test sources -->
+    <Match>
+        <Source name="~.*[/\\]test[/\\].*"/>
+    </Match>
+
+    <!-- Exclude specific false positives -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP"/>
+        <Class name="com.mycompany.base.core.resilience.ResilienceProperties"/>
+    </Match>
+
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+        <Class name="com.mycompany.base.core.resilience.ResilienceProperties"/>
+    </Match>
+
+    <!-- Exclude serialization related warnings -->
+    <Match>
+        <Bug pattern="SE_NO_SERIALVERSIONID"/>
+        <Class name="com.mycompany.base.core.exception.BaseException"/>
+    </Match>
+
+    <!-- Exclude logging related warnings -->
+    <Match>
+        <Bug pattern="SLF4J_LOGGER_SHOULD_BE_PRIVATE"/>
+        <Class name="com.mycompany.base.core.logging.LoggingUtils"/>
+    </Match>
+
+    <Match>
+        <Bug pattern="SLF4J_LOGGER_SHOULD_BE_PRIVATE"/>
+        <Class name="com.mycompany.base.core.validation.ValidationUtils"/>
+    </Match>
+
+    <!-- Exclude validation related warnings -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP"/>
+        <Class name="com.mycompany.base.core.validation.ValidationUtils"/>
+    </Match>
+
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+        <Class name="com.mycompany.base.core.validation.ValidationUtils"/>
+    </Match>
+
+</FindBugsFilter>

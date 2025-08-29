@@ -1,6 +1,6 @@
 ## 1. Mục tiêu (Objective)
 
-- Cung cấp BOM `my-base-bom` để khoá version thư viện (theo Spring Boot và nội bộ) giúp modules/app không cần chỉ định `<version>` lặp lại, giảm drift.
+- Cung cấp BOM `java-base-bom` để khoá version thư viện (theo Spring Boot và nội bộ) giúp modules/app không cần chỉ định `<version>` lặp lại, giảm drift.
 - Tập trung hoá việc override/lock versions; đảm bảo tính tương thích và bảo mật qua quản trị phiên bản tập trung.
 
 ## 2. Kiến trúc/Thiết kế tổng quan (Overview)
@@ -13,12 +13,12 @@ Sơ đồ quan hệ sử dụng:
 
 ```mermaid
 graph LR
-  A[my-base-bom] -- import --> B[Ứng dụng/App]
-  A -- manage --> C[my-base-core]
-  A -- manage --> D[my-base-security]
-  A -- manage --> E[my-base-cache]
-  A -- manage --> F[my-base-observability]
-  A -- manage --> G[my-base-starter]
+  A[java-base-bom] -- import --> B[Ứng dụng/App]
+  A -- manage --> C[java-base-core]
+  A -- manage --> D[java-base-security]
+  A -- manage --> E[java-base-cache]
+  A -- manage --> F[java-base-observability]
+  A -- manage --> G[java-base-starter]
 ```
 
 ## 3. Các bước setup chi tiết (Step-by-step Setup)
@@ -30,10 +30,10 @@ graph LR
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>com.mycompany.base</groupId>
-    <artifactId>my-base-parent</artifactId>
+    <artifactId>java-base-parent</artifactId>
     <version>1.0.0-SNAPSHOT</version>
   </parent>
-  <artifactId>my-base-bom</artifactId>
+  <artifactId>java-base-bom</artifactId>
   <packaging>pom</packaging>
   <dependencyManagement>
     <dependencies>
@@ -46,7 +46,7 @@ graph LR
       </dependency>
       <dependency>
         <groupId>com.mycompany.base</groupId>
-        <artifactId>my-base-core</artifactId>
+        <artifactId>java-base-core</artifactId>
         <version>${project.version}</version>
       </dependency>
       <!-- add other internal modules: security, cache, observability, starter -->
@@ -62,7 +62,7 @@ graph LR
   <dependencies>
     <dependency>
       <groupId>com.mycompany.base</groupId>
-      <artifactId>my-base-bom</artifactId>
+      <artifactId>java-base-bom</artifactId>
       <version>1.0.0-SNAPSHOT</version>
       <type>pom</type>
       <scope>import</scope>
@@ -73,7 +73,7 @@ graph LR
 <dependencies>
   <dependency>
     <groupId>com.mycompany.base</groupId>
-    <artifactId>my-base-starter</artifactId>
+    <artifactId>java-base-starter</artifactId>
   </dependency>
 </dependencies>
 ```
@@ -124,7 +124,7 @@ Ví dụ override thêm thư viện:
 
 ## 5. Cách kiểm thử/triển khai (Testing & Deployment)
 
-- Kiểm tra hiệu lực BOM: `mvn -pl my-base-bom -am -DskipTests help:effective-pom`.
+- Kiểm tra hiệu lực BOM: `mvn -pl java-base-bom -am -DskipTests help:effective-pom`.
 - Tạo sample app import BOM, kiểm tra build thành công mà không chỉ định `<version>` cho libs đã quản lý.
 - Triển khai: deploy theo cơ chế chung của parent (snapshots/releases) lên Nexus/Artifactory.
 

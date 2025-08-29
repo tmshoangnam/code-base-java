@@ -7,7 +7,7 @@
 
 ## 2. Kiến trúc/Thiết kế tổng quan (Overview)
 
-- Kiểu: `jar` optional (pure library: helpers/constants/properties). Wiring được thực hiện ở `my-base-starter`.
+- Kiểu: `jar` optional (pure library: helpers/constants/properties). Wiring được thực hiện ở `java-base-starter`.
 - Phụ thuộc: `micrometer-core` (library), không kéo `actuator`/registry trong lib. Ở starter: `spring-boot-starter-actuator`, `micrometer-registry-prometheus`, `micrometer-tracing-bridge-otel`, `opentelemetry-exporter-otlp`.
 - Cung cấp: conventions/metrics names/helpers; auto-configuration, health indicators, registry selection nằm ở starter.
 

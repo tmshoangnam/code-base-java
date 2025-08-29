@@ -1,0 +1,267 @@
+# Observability Configuration Example
+# Copy this to your application.yml and customize as needed
+
+my-base:
+  observability:
+    metrics:
+      enabled: true
+      registry-type: "micrometer"
+      export-interval: 15s
+      enable-jvm-metrics: true
+      enable-system-metrics: true
+      enable-process-metrics: true
+      enable-tomcat-metrics: true
+      enable-hikari-metrics: true
+      enable-cache-metrics: true
+      enable-custom-metrics: true
+      enabled-metrics:
+        - "jvm"
+        - "system"
+        - "process"
+        - "tomcat"
+        - "hikari"
+        - "cache"
+        - "custom"
+      metrics-retention: 30d
+    
+    tracing:
+      enabled: true
+      tracer-type: "opentelemetry"
+      service-name: "my-base-service"
+      service-version: "1.0.0"
+      environment: "development"
+      enable-sampling: true
+      sampling-rate: 1.0
+      trace-timeout: 30s
+      enable-baggage: true
+      enable-correlation: true
+      excluded-paths:
+        - "/health/**"
+        - "/actuator/**"
+        - "/metrics/**"
+        - "/favicon.ico"
+      enable-async-tracing: true
+      max-trace-depth: 100
+    
+    health:
+      enabled: true
+      check-interval: 30s
+      timeout: 10s
+      enable-liveness-probe: true
+      enable-readiness-probe: true
+      enable-startup-probe: true
+      liveness-endpoint: "/actuator/health/liveness"
+      readiness-endpoint: "/actuator/health/readiness"
+      startup-endpoint: "/actuator/health/startup"
+      health-indicators:
+        - "diskSpace"
+        - "ping"
+        - "db"
+        - "redis"
+        - "cache"
+        - "custom"
+      enable-health-groups: true
+      startup-timeout: 5m
+    
+    logging:
+      enabled: true
+      level: "INFO"
+      pattern: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+      enable-json-format: false
+      enable-structured-logging: true
+      enable-correlation-id: true
+      enable-request-id: true
+      enable-user-id: true
+      enable-performance-logging: true
+      performance-threshold: 100ms
+      excluded-paths:
+        - "/health/**"
+        - "/actuator/**"
+        - "/metrics/**"
+        - "/favicon.ico"
+    
+    prometheus:
+      enabled: true
+      endpoint: "/actuator/prometheus"
+      scrape-interval: 15s
+      enable-histograms: true
+      enable-summaries: true
+      enable-counters: true
+      enable-gauges: true
+      buckets:
+        - "0.1"
+        - "0.5"
+        - "1.0"
+        - "2.0"
+        - "5.0"
+        - "10.0"
+        - "30.0"
+        - "60.0"
+      metrics-retention: 15d
+    
+    grafana:
+      enabled: false
+      url: "http://localhost:3000"
+      username: "admin"
+      password: "admin"
+      api-key: "${GRAFANA_API_KEY:}"
+      enable-dashboard-provisioning: false
+      dashboard-path: "classpath:grafana/dashboards"
+      enable-data-source-provisioning: false
+      data-source-path: "classpath:grafana/datasources"
+      provisioning-interval: 5m
+    
+    alerting:
+      enabled: false
+      alert-manager-url: "http://localhost:9093"
+      alert-check-interval: 30s
+      enable-slack-notifications: false
+      slack-webhook-url: "${SLACK_WEBHOOK_URL:}"
+      slack-channel: "#alerts"
+      slack-username: "AlertManager"
+      enable-email-notifications: false
+      smtp-host: "localhost"
+      smtp-port: 587
+      smtp-username: "${SMTP_USERNAME:}"
+      smtp-password: "${SMTP_PASSWORD:}"
+      from-email: "alerts@mycompany.com"
+      to-emails:
+        - "admin@mycompany.com"
+        - "devops@mycompany.com"
+      enable-pager-duty: false
+      pager-duty-service-key: "${PAGERDUTY_SERVICE_KEY:}"
+      enable-webhook-notifications: false
+      webhook-urls:
+        - "https://hooks.slack.com/services/xxx/yyy/zzz"
+        - "https://api.telegram.org/bot<token>/sendMessage"
+
+# Spring Boot Actuator configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,env,configprops,beans,threaddump,heapdump
+      base-path: /actuator
+      cors:
+        allowed-origins: "*"
+        allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+        allowed-headers: "*"
+        allow-credentials: true
+        max-age: 3600
+  
+  endpoint:
+    health:
+      show-details: when-authorized
+      show-components: always
+      show-probes: always
+      group:
+        readiness:
+          include: readinessState,db,redis,cache
+        liveness:
+          include: livenessState,ping
+        startup:
+          include: startupState,ping
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+    env:
+      enabled: true
+    configprops:
+      enabled: true
+    beans:
+      enabled: true
+    threaddump:
+      enabled: true
+    heapdump:
+      enabled: true
+  
+  health:
+    redis:
+      enabled: true
+    db:
+      enabled: true
+    cache:
+      enabled: true
+    diskspace:
+      enabled: true
+      threshold: 10MB
+  
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+        descriptions: true
+        step: 30s
+        enabled: true
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5,0.95,0.99
+        http.server.requests: 0.5,0.95,0.99
+    tags:
+      application: ${spring.application.name:my-base-service}
+      environment: ${spring.profiles.active:default}
+      version: ${my-base.observability.tracing.service-version:1.0.0}
+
+# Logging configuration
+logging:
+  level:
+    com.mycompany.base.observability: DEBUG
+    org.springframework.boot.actuate: INFO
+    io.micrometer: DEBUG
+    io.prometheus: DEBUG
+  
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  
+  file:
+    name: logs/my-base-service.log
+    max-size: 100MB
+    max-history: 30
+  
+  logback:
+    rollingpolicy:
+      max-file-size: 100MB
+      max-history: 30
+      total-size-cap: 3GB
+
+# OpenTelemetry configuration (if using OpenTelemetry)
+otel:
+  traces:
+    exporter: jaeger
+    endpoint: http://localhost:14250
+    sampler:
+      type: parent-based-trace-id-ratio
+      arg: 1.0
+  metrics:
+    exporter: prometheus
+    endpoint: http://localhost:9464
+  logs:
+    exporter: logging
+    level: INFO
+
+# Micrometer configuration
+management:
+  metrics:
+    tags:
+      application: ${spring.application.name:my-base-service}
+      environment: ${spring.profiles.active:default}
+      version: ${my-base.observability.tracing.service-version:1.0.0}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5,0.95,0.99
+    enable:
+      jvm: true
+      system: true
+      process: true
+      tomcat: true
+      hikari: true
+      cache: true
+      http: true
+      logback: true

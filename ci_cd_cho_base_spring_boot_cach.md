@@ -8,22 +8,22 @@
 
 - Repo: **my-base/** (riêng với repo app business)
 - Modules khuyến nghị (tách nhỏ để dùng linh hoạt):
-  - `my-base-bom` (type=pom) – quản lý version tập trung
-  - `my-base-core` – error handling, logging, common utils, config
-  - `my-base-security` – Spring Security + JWT (không nhúng policy app-specific)
-  - `my-base-cache` – cấu hình cache abstraction (Redis/Caffeine) tối thiểu
-  - `my-base-starter` – Spring Boot starter import core + auto-config (spring.factories/spring-autoconfigure-metadata)
-  - (tuỳ chọn) `my-base-observability` – actuator, micrometer, prometheus
+  - `java-base-bom` (type=pom) – quản lý version tập trung
+  - `java-base-core` – error handling, logging, common utils, config
+  - `java-base-security` – Spring Security + JWT (không nhúng policy app-specific)
+  - `java-base-cache` – cấu hình cache abstraction (Redis/Caffeine) tối thiểu
+  - `java-base-starter` – Spring Boot starter import core + auto-config (spring.factories/spring-autoconfigure-metadata)
+  - (tuỳ chọn) `java-base-observability` – actuator, micrometer, prometheus
 
 ```
 my-base/
 ├─ pom.xml                  (parent aggregator)
-├─ my-base-bom/             (dependencyManagement)
-├─ my-base-core/
-├─ my-base-security/
-├─ my-base-cache/
-├─ my-base-observability/   (optional)
-└─ my-base-starter/
+├─ java-base-bom/             (dependencyManagement)
+├─ java-base-core/
+├─ java-base-security/
+├─ java-base-cache/
+├─ java-base-observability/   (optional)
+└─ java-base-starter/
 ```
 
 ---
@@ -39,16 +39,16 @@ my-base/
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.mycompany.base</groupId>
-  <artifactId>my-base-parent</artifactId>
+  <artifactId>java-base-parent</artifactId>
   <version>1.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <modules>
-    <module>my-base-bom</module>
-    <module>my-base-core</module>
-    <module>my-base-security</module>
-    <module>my-base-cache</module>
-    <module>my-base-observability</module>
-    <module>my-base-starter</module>
+    <module>java-base-bom</module>
+    <module>java-base-core</module>
+    <module>java-base-security</module>
+    <module>java-base-cache</module>
+    <module>java-base-observability</module>
+    <module>java-base-starter</module>
   </modules>
 
   <properties>
@@ -93,7 +93,7 @@ my-base/
 </project>
 ```
 
-**1.2 BOM `my-base-bom/pom.xml`** – quản lý phiên bản tập trung:
+**1.2 BOM `java-base-bom/pom.xml`** – quản lý phiên bản tập trung:
 
 ```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -102,10 +102,10 @@ my-base/
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>com.mycompany.base</groupId>
-    <artifactId>my-base-parent</artifactId>
+    <artifactId>java-base-parent</artifactId>
     <version>1.0.0-SNAPSHOT</version>
   </parent>
-  <artifactId>my-base-bom</artifactId>
+  <artifactId>java-base-bom</artifactId>
   <packaging>pom</packaging>
 
   <dependencyManagement>
@@ -120,28 +120,28 @@ my-base/
       <!-- lock version libs khác tại đây -->
       <dependency>
         <groupId>com.mycompany.base</groupId>
-        <artifactId>my-base-core</artifactId>
+        <artifactId>java-base-core</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>com.mycompany.base</groupId>
-        <artifactId>my-base-security</artifactId>
+        <artifactId>java-base-security</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>com.mycompany.base</groupId>
-        <artifactId>my-base-cache</artifactId>
+        <artifactId>java-base-cache</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>com.mycompany.base</groupId>
-        <artifactId>my-base-observability</artifactId>
+        <artifactId>java-base-observability</artifactId>
         <version>${project.version}</version>
         <optional>true</optional>
       </dependency>
       <dependency>
         <groupId>com.mycompany.base</groupId>
-        <artifactId>my-base-starter</artifactId>
+        <artifactId>java-base-starter</artifactId>
         <version>${project.version}</version>
       </dependency>
     </dependencies>
@@ -153,7 +153,7 @@ my-base/
 
 ## 2) Module mẫu (core & starter)
 
-**2.1 `my-base-core/pom.xml`**
+**2.1 `java-base-core/pom.xml`**
 ```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -161,10 +161,10 @@ my-base/
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>com.mycompany.base</groupId>
-    <artifactId>my-base-parent</artifactId>
+    <artifactId>java-base-parent</artifactId>
     <version>1.0.0-SNAPSHOT</version>
   </parent>
-  <artifactId>my-base-core</artifactId>
+  <artifactId>java-base-core</artifactId>
 
   <dependencies>
     <dependency>
@@ -183,7 +183,7 @@ my-base/
 </project>
 ```
 
-**2.2 `my-base-starter/pom.xml`** – để app chỉ cần add 1 starter:
+**2.2 `java-base-starter/pom.xml`** – để app chỉ cần add 1 starter:
 ```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -191,15 +191,15 @@ my-base/
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>com.mycompany.base</groupId>
-    <artifactId>my-base-parent</artifactId>
+    <artifactId>java-base-parent</artifactId>
     <version>1.0.0-SNAPSHOT</version>
   </parent>
-  <artifactId>my-base-starter</artifactId>
+  <artifactId>java-base-starter</artifactId>
 
   <dependencies>
     <dependency>
       <groupId>com.mycompany.base</groupId>
-      <artifactId>my-base-core</artifactId>
+      <artifactId>java-base-core</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -209,7 +209,7 @@ my-base/
 </project>
 ```
 
-**2.3 Auto-config** – trong `my-base-starter`:
+**2.3 Auto-config** – trong `java-base-starter`:
 ```
 src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports
 ```
@@ -511,7 +511,7 @@ Trong GitHub Actions, dùng `actions/setup-java` với `server-id`/`username`/`p
   <dependencies>
     <dependency>
       <groupId>com.mycompany.base</groupId>
-      <artifactId>my-base-bom</artifactId>
+      <artifactId>java-base-bom</artifactId>
       <version>1.0.0</version>
       <type>pom</type>
       <scope>import</scope>
@@ -525,7 +525,7 @@ Trong GitHub Actions, dùng `actions/setup-java` với `server-id`/`username`/`p
 <dependencies>
   <dependency>
     <groupId>com.mycompany.base</groupId>
-    <artifactId>my-base-starter</artifactId>
+    <artifactId>java-base-starter</artifactId>
   </dependency>
 </dependencies>
 ```

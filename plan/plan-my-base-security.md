@@ -26,7 +26,7 @@ sequenceDiagram
   participant Client
   participant RateLimiter
   participant Gateway/App
-  participant SecurityLib as my-base-security
+  participant SecurityLib as java-base-security
   participant AuditLogger
   
   Client->>RateLimiter: Request with JWT
@@ -41,7 +41,7 @@ sequenceDiagram
 
 ## 3. Các bước setup chi tiết (Step-by-step Setup)
 
-1) POM và dependencies (trong `my-base-security`, tối ưu cho library):
+1) POM và dependencies (trong `java-base-security`, tối ưu cho library):
 
 ```xml
 <dependencies>
@@ -309,7 +309,7 @@ class SecurityIntegrationTest {
 - Unit test: verify/parse JWT, clock skew, invalid signature, rate limiting.
 - Integration test: khởi tạo `SecurityFilterChain` và test endpoints 200/401/403/429.
 - Security testing: XSS, SQL injection, CSRF protection.
-- Deploy: theo parent, artifact `my-base-security` publish như library.
+- Deploy: theo parent, artifact `java-base-security` publish như library.
 
 ## 6. Lưu ý mở rộng/Best practices
 

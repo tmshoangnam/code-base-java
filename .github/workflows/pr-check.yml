@@ -1,0 +1,55 @@
+name: Pull Request Check
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  JAVA_VERSION: '17'
+
+jobs:
+  pr-check:
+    name: PR Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+      
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+      
+      - name: Validate POM files
+        run: mvn validate
+      
+      - name: Compile
+        run: mvn clean compile
+      
+      - name: Run Tests
+        run: mvn test
+      
+      - name: Check Code Style
+        run: mvn checkstyle:check
+      
+      - name: Check for Security Vulnerabilities
+        run: mvn dependency-check:check
+      
+      - name: Generate Coverage Report
+        run: mvn jacoco:report
+      
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: **/target/site/jacoco/

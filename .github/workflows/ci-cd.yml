@@ -1,0 +1,256 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  release:
+    types: [ published ]
+
+env:
+  JAVA_VERSION: '17'
+  MAVEN_VERSION: '3.9.5'
+  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+  NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+
+jobs:
+  # Build and Test Job
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # For SonarQube analysis
+      
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+      
+      - name: Setup Maven
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'maven'
+          maven-version: ${{ env.MAVEN_VERSION }}
+      
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+      
+      - name: Validate POM files
+        run: mvn validate
+      
+      - name: Compile and Test
+        run: mvn clean compile test-compile
+      
+      - name: Run Unit Tests
+        run: mvn test
+      
+      - name: Run Integration Tests
+        run: mvn verify -Dskip.unit.tests=true
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: test-results
+          path: |
+            **/target/surefire-reports/
+            **/target/failsafe-reports/
+            **/target/jacoco/
+      
+      - name: Build JARs
+        run: mvn package -DskipTests
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts
+          path: |
+            **/target/*.jar
+            **/target/*.war
+            **/target/*.ear
+            !**/target/*-sources.jar
+            !**/target/*-javadoc.jar
+
+  # Quality Check Job
+  quality-check:
+    name: Quality Check
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+      
+      - name: Setup Maven
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'maven'
+          maven-version: ${{ env.MAVEN_VERSION }}
+      
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifacts
+      
+      - name: Run Code Quality Checks
+        run: |
+          mvn checkstyle:check
+          mvn spotbugs:check
+          mvn dependency-check:check
+      
+      - name: Generate Test Coverage Report
+        run: mvn jacoco:report
+      
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: **/target/site/jacoco/
+      
+      - name: SonarQube Analysis
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          mvn sonar:sonar \
+            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
+            -Dsonar.login=${{ env.SONAR_TOKEN }} \
+            -Dsonar.projectKey=my-base-java \
+            -Dsonar.projectName="My Base Java Foundation Libraries" \
+            -Dsonar.projectVersion=${{ github.ref_name }}
+
+  # Security Scan Job
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+      
+      - name: Setup Maven
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'maven'
+          maven-version: ${{ env.MAVEN_VERSION }}
+      
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifacts
+      
+      - name: OWASP Dependency Check
+        run: mvn dependency-check:check
+      
+      - name: Upload security report
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-report
+          path: **/target/dependency-check-report.html
+
+  # Deploy Job (Release only)
+  deploy:
+    name: Deploy to Nexus
+    runs-on: ubuntu-latest
+    needs: [build-and-test, quality-check, security-scan]
+    if: github.event_name == 'release'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+      
+      - name: Setup Maven
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'maven'
+          maven-version: ${{ env.MAVEN_VERSION }}
+      
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifacts
+      
+      - name: Deploy to Nexus Repository
+        run: |
+          mvn deploy \
+            -DskipTests \
+            -DaltDeploymentRepository=nexus-releases::default::https://nexus.company.com/repository/maven-releases/ \
+            -Dnexus.username=${{ env.NEXUS_USERNAME }} \
+            -Dnexus.password=${{ env.NEXUS_PASSWORD }}
+      
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+  # Notify Job
+  notify:
+    name: Notify Team
+    runs-on: ubuntu-latest
+    needs: [build-and-test, quality-check, security-scan]
+    if: always()
+    
+    steps:
+      - name: Notify on Success
+        if: success()
+        run: |
+          echo "✅ CI/CD Pipeline completed successfully!"
+          echo "Build artifacts are available for download"
+          echo "Quality checks passed"
+          echo "Security scan completed"
+      
+      - name: Notify on Failure
+        if: failure()
+        run: |
+          echo "❌ CI/CD Pipeline failed!"
+          echo "Please check the logs for details"
+          echo "Build artifacts may be incomplete"
+      
+      - name: Send Slack Notification (Optional)
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#dev-team'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

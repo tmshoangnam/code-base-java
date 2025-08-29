@@ -1,6 +1,6 @@
 ## 1. Mục tiêu (Objective)
 
-- Xây dựng parent aggregator `my-base-parent` làm gốc multi-module Maven, thống nhất build, versioning, phát hành.
+- Xây dựng parent aggregator `java-base-parent` làm gốc multi-module Maven, thống nhất build, versioning, phát hành.
 - Tối thiểu hoá cấu hình lặp lại, khoá plugin versions, định danh nơi publish (Nexus/Artifactory).
 - Bảo đảm không xung đột giữa modules, dễ mở rộng CI/CD và quy trình release.
 
@@ -14,12 +14,12 @@ Sơ đồ phụ thuộc cấp cao:
 
 ```mermaid
 graph TD
-  A[my-base-parent (pom)] --> B[my-base-bom (pom)]
-  A --> C[my-base-core (jar)]
-  A --> D[my-base-security (jar)]
-  A --> E[my-base-cache (jar)]
-  A --> F[my-base-observability (jar, optional)]
-  A --> G[my-base-starter (jar)]
+  A[java-base-parent (pom)] --> B[java-base-bom (pom)]
+  A --> C[java-base-core (jar)]
+  A --> D[java-base-security (jar)]
+  A --> E[java-base-cache (jar)]
+  A --> F[java-base-observability (jar, optional)]
+  A --> G[java-base-starter (jar)]
 ```
 
 ## 3. Các bước setup chi tiết (Step-by-step Setup)
@@ -30,16 +30,16 @@ graph TD
 <project>
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.mycompany.base</groupId>
-  <artifactId>my-base-parent</artifactId>
+  <artifactId>java-base-parent</artifactId>
   <version>1.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <modules>
-    <module>my-base-bom</module>
-    <module>my-base-core</module>
-    <module>my-base-security</module>
-    <module>my-base-cache</module>
-    <module>my-base-observability</module>
-    <module>my-base-starter</module>
+    <module>java-base-bom</module>
+    <module>java-base-core</module>
+    <module>java-base-security</module>
+    <module>java-base-cache</module>
+    <module>java-base-observability</module>
+    <module>java-base-starter</module>
   </modules>
   <properties>
     <maven.compiler.source>17</maven.compiler.source>

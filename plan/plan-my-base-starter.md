@@ -6,7 +6,7 @@
 
 ## 2. Kiến trúc/Thiết kế tổng quan (Overview)
 
-- Kiểu: `jar` (starter). Phụ thuộc: `my-base-core`, `my-base-security`, `my-base-cache`, `my-base-observability`, `spring-boot-autoconfigure`.
+- Kiểu: `jar` (starter). Phụ thuộc: `java-base-core`, `java-base-security`, `java-base-cache`, `java-base-observability`, `spring-boot-autoconfigure`.
 - Chứa: các lớp `@AutoConfiguration` có điều kiện, `AutoConfiguration.imports`, metadata cho properties.
 - Phân tách rõ: libraries (core/security/cache/observability) KHÔNG khai báo bean; starter chịu trách nhiệm wiring auto-config.
 - Tracing/metrics dùng Micrometer + OpenTelemetry (OTLP) khi có trên classpath.
@@ -22,7 +22,7 @@ Sơ đồ auto-configuration flow:
 
 ```mermaid
 graph TB
-  A[my-base-starter] --> B[AutoConfiguration.imports]
+  A[java-base-starter] --> B[AutoConfiguration.imports]
   B --> C[CoreAutoConfiguration]
   B --> D[SecurityAutoConfiguration]
   B --> E[CacheAutoConfiguration]
@@ -58,21 +58,21 @@ graph TB
 <dependencies>
   <dependency>
     <groupId>com.mycompany.base</groupId>
-    <artifactId>my-base-core</artifactId>
+    <artifactId>java-base-core</artifactId>
   </dependency>
   <dependency>
     <groupId>com.mycompany.base</groupId>
-    <artifactId>my-base-security</artifactId>
+    <artifactId>java-base-security</artifactId>
     <optional>true</optional>
   </dependency>
   <dependency>
     <groupId>com.mycompany.base</groupId>
-    <artifactId>my-base-cache</artifactId>
+    <artifactId>java-base-cache</artifactId>
     <optional>true</optional>
   </dependency>
   <dependency>
     <groupId>com.mycompany.base</groupId>
-    <artifactId>my-base-observability</artifactId>
+    <artifactId>java-base-observability</artifactId>
     <optional>true</optional>
   </dependency>
   <dependency>
@@ -440,7 +440,7 @@ void shouldLoadQuickly() {
 - Kiểm thử: khởi chạy sample app, kiểm tra auto-config tạo beans mặc định; confirm có thể override.
 - Integration testing: Test với different configurations và classpath combinations.
 - Performance testing: Verify startup time và memory usage.
-- Triển khai: publish artifact `my-base-starter`; ứng dụng chỉ cần thêm dependency.
+- Triển khai: publish artifact `java-base-starter`; ứng dụng chỉ cần thêm dependency.
 
 ## 6. Lưu ý mở rộng/Best practices
 
