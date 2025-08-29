@@ -50,7 +50,7 @@
         <redis.version>3.2.1</redis.version>
         
         <!-- Testing Versions -->
-        <junit-jupiter.version>5.10.2</junit-jupiter.version>
+        <junit-jupiter.version>5.13.4</junit-jupiter.version>
         <assertj.version>3.25.3</assertj.version>
         <mockito.version>5.8.0</mockito.version>
         <testcontainers.version>1.19.6</testcontainers.version>
