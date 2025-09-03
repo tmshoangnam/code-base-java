@@ -1,0 +1,67 @@
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Target folders
+**/target/
+
+# Compiled class files
+*.class
+
+# Generated JARs, WARs, EARs
+*.jar
+*.war
+
+# Maven wrapper
+.mvn/
+mvnw
+mvnw.cmd
+*.ear
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+# -------------------------------
+# Logs / Temp
+# -------------------------------
+*.log
+*.tmp
+*.swp
+*.DS_Store
+*.bak
+
+# -------------------------------
+# OS-specific
+# -------------------------------
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+
