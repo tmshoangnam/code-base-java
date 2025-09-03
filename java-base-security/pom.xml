@@ -3,7 +3,7 @@
     <parent>
         <groupId>com.mycompany.base</groupId>
         <artifactId>java-base-parent</artifactId>
-        <version>1.0.1</version>
+        <version>1.0.2-SNAPSHOT</version>
     </parent>
     <artifactId>java-base-security</artifactId>
     <packaging>jar</packaging>
