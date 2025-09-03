@@ -35,7 +35,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!-- Spring Boot Version -->
-        <spring.boot.version>3.3.2</spring.boot.version>
+        <spring.boot.version>3.5.5</spring.boot.version>
 
         <!-- Core Dependency Versions -->
         <resilience4j.version>2.2.0</resilience4j.version>
