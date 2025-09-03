@@ -1,174 +1,534 @@
-# Quy Trình Chuẩn Dựng Base Project Java Spring Boot
+Nice — I'll deliver a professional, production-ready AI Agent rule engine + orchestration codebase in Java. The deliverable includes:
+	• a high-level design,
+	• policy/config formats,
+	• a complete, well-commented Java implementation (interfaces + default implementations),
+	• examples of usage,
+	• unit-test skeletons,
+	• guidance for deployment, observability, and safety.
+Everything is written cleanly, with emphasis on accuracy, auditability, extensibility, and safety.
 
-Dưới đây là quy trình chuẩn và cụ thể để dựng một base project Java Spring Boot mạnh mẽ, linh hoạt và dễ bảo trì, đáp ứng đầy đủ các tiêu chí về core, module hóa, hiệu suất, và kết nối đa CSDL.
+Summary (one-liner)
+A pluggable Java AI Agent that enforces input validation, policy checks, prompt sanitization, rate limiting, retries, response validation, and auditing — while keeping the model client abstract.
 
-## I. Tổng Quan Kiến Trúc
+1. High-level design
+Agent pipeline (linear, pluggable components):
+	1. InputValidator — ensures request shape, size limits, types.
+	2. PromptSanitizer — removes PII, normalizes prompt, enforces allowed characters.
+	3. PolicyEnforcer — checks policies (prohibited topics, allowed operations, user roles).
+	4. RateLimiter — per-user or per-key rate limits.
+	5. PromptTransformer — optionally add system prompts, few-shot examples.
+	6. ModelClient — pluggable client interface to call LLMs.
+	7. ResponseValidator — checks model output for safety/format correctness.
+	8. PostProcessor — format/transform outputs.
+	9. AuditLogger — logs request/response, policy decisions, correlation id, masked content.
+	10. Metrics & Tracing — hooks for Micrometer/OpenTelemetry.
+Each step is an interface so you can swap implementations. Defaults provided.
 
-Kiến trúc tổng thể của project sẽ được xây dựng theo dạng **đa module (multi-module)** để đảm bảo sự tách biệt rõ ràng về chức năng và dễ dàng phát triển, bảo trì cũng như mở rộng sau này.
+2. Policy / Config format
+Use YAML for policies and a small domain model. Example agent-policy.yaml:
+version: 1
+global:
+  max_prompt_chars: 5000
+  max_response_chars: 20000
+  allowed_languages: ["en", "vi"]
+  block_pii: true
+rate_limits:
+  default:
+    requests_per_minute: 60
+  api_key_overrides:
+    "partner-key-abc": { requests_per_minute: 300 }
+prohibitions:
+  - id: illegal-activity
+    description: "No instructions that facilitate illegal activity"
+    match_patterns:
+      - "how to make a bomb"
+      - "evade law"
+  - id: malware
+    description: "No malware code generation"
+    match_patterns:
+      - "write a virus"
+      - "create malware"
+required_response_schema:
+  type: object
+  required:
+    - status
+    - data
+  properties:
+    status:
+      type: string
+      enum: ["ok","error"]
+    data:
+      type: object
+This policy is loaded by PolicyEnforcer and used to approve/deny requests.
 
-**Cấu trúc thư mục gợi ý:**
-```plaintext
-my-app/
-├── pom.xml (Parent POM)
-├── my-app-core/       (Module Core)
-├── my-app-api/        (Module API - Web)
-├── my-app-service/    (Module Service - Business Logic)
-├── my-app-persistence/ (Module Persistence - Data Access)
-└── my-app-security/   (Module Security)
-```
+3. Java Implementation
+Below is a single-file-ish listing separated by key classes/interfaces for clarity. In a real project, place each class in its own file under appropriate packages.
+	Note: adapt package names to your repo, and add dependency management (BOM) for jakarta.validation, slf4j-api, jackson-databind, resilience4j, guava (optional), ratelimiter (resilience4j or bucket4j), and testing libs.
 
-```plaintext
-my-app/  <-- THƯ MỤC GỐC (PROJECT CHA)
-│
-├── pom.xml  <-- File POM cha. KHÔNG có code ở đây.
-│
-├── my-app-core/  <-- Module con
-│   ├── src/main/java/...  <-- Mã nguồn của module Core nằm ở đây
-│   └── pom.xml
-│
-├── my-app-api/   <-- Module con
-│   ├── src/main/java/...  <-- Mã nguồn của module API nằm ở đây
-│   └── pom.xml
-│
-├── my-app-service/ <-- Module con
-│   ├── src/main/java/...  <-- Mã nguồn của module Service nằm ở đây
-│   └── pom.xml
-│
-└── ... (các module khác)
-```
+3.1 Core interfaces
+package com.mycompany.ai.agent.api;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+/**
+ * Represents a request to the AI agent.
+ */
+public final class AgentRequest {
+    public final String apiKey;
+    public final String userId;
+    public final String prompt;
+    public final String language;
+    public final String correlationId;
+public AgentRequest(String apiKey, String userId, String prompt, String language, String correlationId) {
+        this.apiKey = apiKey;
+        this.userId = userId;
+        this.prompt = prompt;
+        this.language = language;
+        this.correlationId = correlationId;
+    }
+}
+/**
+ * Represents a response from the AI agent.
+ */
+public final class AgentResponse {
+    public final boolean success;
+    public final String content;
+    public final String errorCode;
+    public final String correlationId;
+public AgentResponse(boolean success, String content, String errorCode, String correlationId) {
+        this.success = success;
+        this.content = content;
+        this.errorCode = errorCode;
+        this.correlationId = correlationId;
+    }
+}
+/**
+ * Minimal pluggable model client. Implement this to call any LLM provider.
+ */
+public interface ModelClient {
+    /**
+     * Call the model synchronously; implementations may block or be async.
+     * May throw ModelClientException on connectivity/availability errors.
+     */
+    AgentResponse callModel(AgentRequest request, String finalPrompt) throws ModelClientException;
+}
+/** Thrown when ModelClient cannot produce a result due to infra or provider error. */
+public class ModelClientException extends Exception {
+    public ModelClientException(String message, Throwable cause) { super(message, cause); }
+}
 
----
+3.2 Pipeline components (interfaces)
+package com.mycompany.ai.agent.pipeline;
+import com.mycompany.ai.agent.api.AgentRequest;
+import com.mycompany.ai.agent.api.AgentResponse;
+import java.util.concurrent.CompletableFuture;
+public interface InputValidator {
+    void validate(AgentRequest request) throws ValidationException;
+}
+public class ValidationException extends Exception {
+    public ValidationException(String msg) { super(msg); }
+}
+public interface PromptSanitizer {
+    /**
+     * Returns sanitized prompt and optionally metadata (e.g., found PII masked).
+     */
+    String sanitize(String prompt);
+}
+public interface PolicyEnforcer {
+    /**
+     * Return Optional.empty() if allowed; otherwise non-empty with rejection reason.
+     */
+    Optional<PolicyViolation> check(AgentRequest request, String prompt);
+}
+public final class PolicyViolation {
+    public final String code;
+    public final String message;
+    public PolicyViolation(String code, String message) { this.code = code; this.message = message; }
+}
+public interface RateLimiter {
+    void reserveOrThrow(String apiKey, String userId) throws RateLimitExceededException;
+}
+public class RateLimitExceededException extends Exception {
+    public RateLimitExceededException(String msg) { super(msg); }
+}
+public interface PromptTransformer {
+    String transform(AgentRequest request, String prompt);
+}
+public interface ResponseValidator {
+    void validate(AgentResponse response) throws ResponseValidationException;
+}
+public class ResponseValidationException extends Exception {
+    public ResponseValidationException(String msg) { super(msg); }
+}
+public interface AuditLogger {
+    void auditRequest(AgentRequest request, String sanitizedPrompt);
+    void auditResponse(AgentRequest request, AgentResponse response);
+    void auditDenied(AgentRequest request, PolicyViolation violation);
+}
 
-## II. Bước 1: Khởi tạo Project Đa Module
+3.3 Default implementations (concise, production-minded)
+package com.mycompany.ai.agent.impl;
+import com.mycompany.ai.agent.api.*;
+import com.mycompany.ai.agent.pipeline.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+import java.util.*;
+import java.util.regex.Pattern;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+/**
+ * DefaultInputValidator: basic checks (nulls, sizes, languages).
+ */
+public final class DefaultInputValidator implements InputValidator {
+    private static final int MAX_PROMPT_CHARS = 5000;
+    private final Set<String> allowedLanguages;
+public DefaultInputValidator(Set<String> allowedLanguages) {
+        this.allowedLanguages = allowedLanguages == null ? Set.of("en") : allowedLanguages;
+    }
+@Override
+    public void validate(AgentRequest request) throws ValidationException {
+        if (request == null) throw new ValidationException("request is null");
+        if (request.prompt == null || request.prompt.isBlank()) throw new ValidationException("prompt empty");
+        if (request.prompt.length() > MAX_PROMPT_CHARS) throw new ValidationException("prompt too long");
+        if (request.language != null && !allowedLanguages.contains(request.language)) {
+            throw new ValidationException("language not allowed");
+        }
+    }
+}
+/**
+ * DefaultPromptSanitizer: simple PII masking (emails, phone). Replace with stronger libs as required.
+ */
+public final class DefaultPromptSanitizer implements PromptSanitizer {
+    private static final Pattern EMAIL = Pattern.compile("[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+");
+    private static final Pattern PHONE = Pattern.compile("\\b\\d{9,15}\\b");
+@Override
+    public String sanitize(String prompt) {
+        if (prompt == null) return null;
+        String r = EMAIL.matcher(prompt).replaceAll("[REDACTED_EMAIL]");
+        r = PHONE.matcher(r).replaceAll("[REDACTED_PHONE]");
+        // other rules...
+        return r;
+    }
+}
+/**
+ * PolicyEnforcer that uses simple pattern matching loaded from memory (from YAML).
+ */
+public final class DefaultPolicyEnforcer implements PolicyEnforcer {
+    private final List<Pattern> prohibitionPatterns;
+    public DefaultPolicyEnforcer(List<String> prohibitionRegexes) {
+        this.prohibitionPatterns = new ArrayList<>();
+        for (String r : prohibitionRegexes) this.prohibitionPatterns.add(Pattern.compile(r, Pattern.CASE_INSENSITIVE));
+    }
+@Override
+    public Optional<PolicyViolation> check(AgentRequest request, String prompt) {
+        for (Pattern p : prohibitionPatterns) {
+            if (p.matcher(prompt).find()) {
+                return Optional.of(new PolicyViolation("prohibition", "Matched prohibited pattern: " + p.pattern()));
+            }
+        }
+        return Optional.empty();
+    }
+}
+/**
+ * Simple in-memory rate limiter using token-bucket per apiKey; for prod use Redis or bucket4j distributed.
+ */
+public final class InMemoryRateLimiter implements RateLimiter {
+    private static final class Bucket {
+        final int capacity;
+        int tokens;
+        long lastRefillEpochMs;
+        final long refillIntervalMs;
+        final int refillAmount;
+Bucket(int capacity, long refillIntervalMs, int refillAmount) {
+            this.capacity = capacity;
+            this.tokens = capacity;
+            this.refillIntervalMs = refillIntervalMs;
+            this.refillAmount = refillAmount;
+            this.lastRefillEpochMs = System.currentTimeMillis();
+        }
+        synchronized boolean tryConsume() {
+            long now = System.currentTimeMillis();
+            long elapsed = now - lastRefillEpochMs;
+            if (elapsed >= refillIntervalMs) {
+                int steps = (int)(elapsed / refillIntervalMs);
+                int refill = Math.min(capacity - tokens, steps * refillAmount);
+                tokens = Math.min(capacity, tokens + refill);
+                lastRefillEpochMs += steps * refillIntervalMs;
+            }
+            if (tokens > 0) { tokens--; return true; }
+            return false;
+        }
+    }
+private final Map<String, Bucket> buckets = new HashMap<>();
+    private final int defaultCapacity;
+    private final long refillIntervalMs;
+    private final int refillAmount;
+public InMemoryRateLimiter(int defaultCapacity, long refillIntervalMs, int refillAmount) {
+        this.defaultCapacity = defaultCapacity;
+        this.refillIntervalMs = refillIntervalMs;
+        this.refillAmount = refillAmount;
+    }
+@Override
+    public void reserveOrThrow(String apiKey, String userId) throws RateLimitExceededException {
+        String key = apiKey != null ? apiKey : "global:" + (userId == null ? "anon" : userId);
+        Bucket b = buckets.computeIfAbsent(key, k -> new Bucket(defaultCapacity, refillIntervalMs, refillAmount));
+        if (!b.tryConsume()) throw new RateLimitExceededException("rate limit exceeded");
+    }
+}
+/**
+ * Basic ResponseValidator using JSON schema-like check (very light).
+ * For production, use JSON Schema validator library with actual schema files.
+ */
+public final class DefaultResponseValidator implements ResponseValidator {
+    private final ObjectMapper mapper = new ObjectMapper();
+    @Override
+    public void validate(AgentResponse response) throws ResponseValidationException {
+        if (response == null) throw new ResponseValidationException("null response");
+        if (!response.success) {
+            // allow non-success but enforce message length and masking
+            if (response.content == null || response.content.length() > 20000)
+                throw new ResponseValidationException("bad response content");
+            return;
+        }
+        // Very lightweight structural check: must be JSON with status field
+        try {
+            var node = mapper.readTree(response.content);
+            if (!node.has("status")) throw new ResponseValidationException("missing status field");
+        } catch (Exception e) {
+            throw new ResponseValidationException("response is not valid JSON: " + e.getMessage());
+        }
+    }
+}
+/**
+ * ConsoleAuditLogger for demo; real impl should redact sensitive fields and write to secure audit store.
+ */
+public final class ConsoleAuditLogger implements AuditLogger {
+    private static final Logger log = LoggerFactory.getLogger(ConsoleAuditLogger.class);
+    @Override
+    public void auditRequest(AgentRequest request, String sanitizedPrompt) {
+        log.info("AUDIT request apiKey={} userId={} cid={} promptSummary={}", 
+          maskKey(request.apiKey), request.userId, request.correlationId, summarize(sanitizedPrompt));
+    }
+    @Override
+    public void auditResponse(AgentRequest request, AgentResponse response) {
+        log.info("AUDIT response cid={} success={} summary={}", request.correlationId, response.success, summarize(response.content));
+    }
+    @Override
+    public void auditDenied(AgentRequest request, PolicyViolation violation) {
+        log.warn("AUDIT denied cid={} reason={}", request.correlationId, violation.message);
+    }
+private static String maskKey(String key) {
+        if (key == null) return "null";
+        if (key.length() <= 6) return "***";
+        return key.substring(0,3) + "***" + key.substring(key.length()-3);
+    }
+    private static String summarize(String s) {
+        if (s == null) return "null";
+        return s.length() > 120 ? s.substring(0,120) + "..." : s;
+    }
+}
 
-Sử dụng **Spring Initializr** để tạo project cha và sau đó thêm các module con.
+3.4 The Agent Orchestrator
+package com.mycompany.ai.agent;
+import com.mycompany.ai.agent.api.*;
+import com.mycompany.ai.agent.pipeline.*;
+import org.slf4j.MDC;
+import java.util.UUID;
+/**
+ * Main orchestrator for AI requests.
+ *
+ * Usage:
+ * - instantiate with implementations (validator, sanitizer, enforcer, rateLimiter, modelClient, responseValidator, auditLogger)
+ * - call execute(request)
+ *
+ * The orchestrator performs synchronous flow; you can add async variants easily.
+ */
+public final class AiAgent {
+    private final InputValidator validator;
+    private final PromptSanitizer sanitizer;
+    private final PolicyEnforcer policy;
+    private final RateLimiter rateLimiter;
+    private final PromptTransformer transformer;
+    private final ModelClient modelClient;
+    private final ResponseValidator responseValidator;
+    private final AuditLogger auditLogger;
+public AiAgent(InputValidator validator,
+                   PromptSanitizer sanitizer,
+                   PolicyEnforcer policy,
+                   RateLimiter rateLimiter,
+                   PromptTransformer transformer,
+                   ModelClient modelClient,
+                   ResponseValidator responseValidator,
+                   AuditLogger auditLogger) {
+        this.validator = validator;
+        this.sanitizer = sanitizer;
+        this.policy = policy;
+        this.rateLimiter = rateLimiter;
+        this.transformer = transformer;
+        this.modelClient = modelClient;
+        this.responseValidator = responseValidator;
+        this.auditLogger = auditLogger;
+    }
+public AgentResponse execute(AgentRequest request) {
+        // ensure correlation id
+        String cid = request.correlationId == null ? UUID.randomUUID().toString() : request.correlationId;
+        AgentRequest reqWithCid = new AgentRequest(request.apiKey, request.userId, request.prompt, request.language, cid);
+// attach to MDC for logs
+        MDC.put("correlationId", cid);
+try {
+            // 1. validate
+            validator.validate(reqWithCid);
+// 2. rate limit
+            rateLimiter.reserveOrThrow(reqWithCid.apiKey, reqWithCid.userId);
+// 3. sanitize
+            String sanitized = sanitizer.sanitize(reqWithCid.prompt);
+// 4. policy check
+            var violation = policy.check(reqWithCid, sanitized);
+            if (violation.isPresent()) {
+                auditLogger.auditDenied(reqWithCid, violation.get());
+                return new AgentResponse(false, null, "policy_denied:" + violation.get().code, cid);
+            }
+auditLogger.auditRequest(reqWithCid, sanitized);
+// 5. transform (e.g. add system prompt)
+            String finalPrompt = transformer.transform(reqWithCid, sanitized);
+// 6. call model
+            AgentResponse modelResp = modelClient.callModel(reqWithCid, finalPrompt);
+// 7. validate response
+            responseValidator.validate(modelResp);
+// 8. audit, return
+            auditLogger.auditResponse(reqWithCid, modelResp);
+            return new AgentResponse(true, modelResp.content, null, cid);
+        } catch (ValidationException ve) {
+            auditLogger.auditDenied(reqWithCid, new PolicyViolation("validation", ve.getMessage()));
+            return new AgentResponse(false, null, "validation:" + ve.getMessage(), cid);
+        } catch (RateLimitExceededException rle) {
+            return new AgentResponse(false, null, "rate_limit", cid);
+        } catch (ModelClientException mce) {
+            return new AgentResponse(false, null, "model_error", cid);
+        } catch (ResponseValidationException rve) {
+            return new AgentResponse(false, null, "response_invalid", cid);
+        } catch (Exception e) {
+            return new AgentResponse(false, null, "internal_error", cid);
+        } finally {
+            MDC.clear();
+        }
+    }
+}
 
-1.  **Tạo các Module con:**
-    *   Tạo các module con (`my-app-core`, `my-app-api`, v.v.) dưới dạng các Maven module.
-    *   Đảm bảo các module con kế thừa từ project cha trong file `pom.xml` của chúng.
+3.5 Example ModelClient (mock)
+package com.mycompany.ai.agent.impl;
+import com.mycompany.ai.agent.api.*;
+import java.util.concurrent.ThreadLocalRandom;
+/**
+ * A mock model client that simulates responses.
+ * Replace with real provider implementation (OpenAI, Anthropic, local LLM).
+ */
+public final class MockModelClient implements ModelClient {
+    @Override
+    public AgentResponse callModel(AgentRequest request, String finalPrompt) throws ModelClientException {
+        // Simulate latency and success/fail
+        try { Thread.sleep(50 + ThreadLocalRandom.current().nextInt(200)); } catch (InterruptedException ignored) {}
+        String result = "{\"status\":\"ok\",\"data\":{\"answer\":\"Simulated reply to prompt: " 
+                         + finalPrompt.replaceAll("\"","'").substring(0, Math.min(300, finalPrompt.length())) + "\"}}";
+        return new AgentResponse(true, result, null, request.correlationId);
+    }
+}
 
----
+3.6 Example PromptTransformer
+package com.mycompany.ai.agent.impl;
+import com.mycompany.ai.agent.api.AgentRequest;
+import com.mycompany.ai.agent.pipeline.PromptTransformer;
+/**
+ * Adds a standard system prompt and few-shot examples.
+ */
+public final class DefaultPromptTransformer implements PromptTransformer {
+    private final String systemPrompt;
+public DefaultPromptTransformer(String systemPrompt) {
+        this.systemPrompt = systemPrompt;
+    }
+@Override
+    public String transform(AgentRequest request, String prompt) {
+        StringBuilder sb = new StringBuilder();
+        if (systemPrompt != null) sb.append(systemPrompt).append("\n\n");
+        sb.append("User: ").append(prompt).append("\nAssistant:");
+        return sb.toString();
+    }
+}
 
-## III. Bước 2: Xây dựng Module `core` - Nền tảng chung
+4. Example wiring (usage)
+import com.mycompany.ai.agent.*;
+import com.mycompany.ai.agent.api.*;
+import com.mycompany.ai.agent.impl.*;
+import java.util.List;
+import java.util.Set;
+public class Demo {
+    public static void main(String[] args) {
+        InputValidator validator = new DefaultInputValidator(Set.of("en","vi"));
+        PromptSanitizer sanitizer = new DefaultPromptSanitizer();
+        PolicyEnforcer enforcer = new DefaultPolicyEnforcer(List.of("how to make a bomb","write a virus","evade law"));
+        RateLimiter rateLimiter = new InMemoryRateLimiter(60, 60_000L, 60); // 60 per minute
+        PromptTransformer transformer = new DefaultPromptTransformer("You are a helpful assistant. Be concise.");
+        ModelClient modelClient = new MockModelClient();
+        ResponseValidator respValidator = new DefaultResponseValidator();
+        AuditLogger auditLogger = new ConsoleAuditLogger();
+AiAgent agent = new AiAgent(validator, sanitizer, enforcer, rateLimiter, transformer, modelClient, respValidator, auditLogger);
+AgentRequest req = new AgentRequest("api-key-xyz", "user-123", "Explain dependency injection in 3 sentences.", "en", null);
+        AgentResponse res = agent.execute(req);
+        System.out.println("Result: " + res.content + " err=" + res.errorCode + " cid=" + res.correlationId);
+    }
+}
 
-Module này chứa các thành phần dùng chung, được thiết kế để dễ dàng mở rộng và bảo trì.
+5. Unit-test skeletons (JUnit 5)
+package com.mycompany.ai.agent.tests;
+import org.junit.jupiter.api.*;
+import static org.assertj.core.api.Assertions.*;
+public class AgentTests {
+@Test
+    void shouldDenyProhibitedPrompt() {
+        // setup agent with policy containing "illegal"
+        // call agent with prompt "how to make a bomb"
+        // assert response.success == false and errorCode contains policy_denied
+    }
+@Test
+    void shouldRateLimit() {
+        // setup InMemoryRateLimiter with small capacity
+        // make > capacity calls and assert last calls get rate_limit
+    }
+@Test
+    void shouldSanitizePII() {
+        // ensure sanitizer masks email and phone
+    }
+@Test
+    void shouldValidateResponseStructure() {
+        // make mock model return invalid JSON -> agent returns response_invalid
+    }
+}
 
-### 1. Logging
+6. Operational guidance
+	• Secrets: do not log API keys in plaintext; store keys encrypted in Vault/KMS.
+	• Audit: redact PII in audit logs; keep full context in secure audit store if required by compliance.
+	• Rate limiting: use distributed store (Redis, bucket4j + Redis) for multi-node systems.
+	• Retries: add idempotency policy for retries; avoid retrying prompts that cause side-effects.
+	• Observability: add Micrometer metrics: request_count, deny_count, rate_limit_count, latency_histogram.
+	• Tracing: pass correlation id to model calls and link with OpenTelemetry spans in ModelClient implementations.
+	• Safety: maintain policy files; allow fast hot-reload (watch YAML file) without restart.
+	• Testing: include Fuzzer tests for prompt injections and adversarial inputs.
 
-Sử dụng **SLF4J** làm facade và **Logback** (mặc định) làm implementation.
+7. Next steps I can implement for you (pick any)
+	• Provide full Maven multi-file project (pom + src layout) that you can clone and run.
+	• Implement a real ModelClient for OpenAI (with exponential backoff and streaming).
+	• Add JSON Schema validation using everit or networknt JSON Schema validators.
+	• Hook to Micrometer and OpenTelemetry with example configs.
+	• Implement distributed rate limiter using Redis.
+Tell me which of these you want next and I’ll produce ready-to-run code and instructions.
 
-*   **Cấu hình:** Tạo file `logback-spring.xml` trong `src/main/resources` của module `core`.
-    *   Định nghĩa các appender khác nhau: console, file, logstash (ELK Stack).
-    *   Cấu hình log theo từng profile (dev, staging, prod).
-    *   Sử dụng AOP (`@Aspect`) để tự động log khi vào/ra một phương thức.
-*   **Thực tiễn tốt nhất:**
-    *   Sử dụng logging có cấu trúc (JSON format) để dễ phân tích.
-    *   Log đầy đủ thông tin ngữ cảnh (request ID, user ID).
-    *   Sử dụng logging bất đồng bộ (`AsyncAppender`) để cải thiện hiệu suất.
-
-### 2. Exception Handling
-
-Xây dựng cơ chế xử lý ngoại lệ tập trung để đảm bảo phản hồi lỗi nhất quán.
-
-*   **Global Exception Handler:** Tạo một class với annotation `@ControllerAdvice`.
-    *   Sử dụng các phương thức `@ExceptionHandler` để xử lý các loại exception cụ thể.
-    *   Trả về một cấu trúc JSON lỗi thống nhất.
-*   **Custom Exceptions:** Định nghĩa các lớp exception tùy chỉnh (`ResourceNotFoundException`, `InvalidInputException`) kế thừa từ `RuntimeException` để thể hiện các lỗi nghiệp vụ.
-*   **Logging:** Log đầy đủ stack trace của exception ở phía server nhưng không để lộ ra cho client.
-
-### 3. Utils
-
-Tập hợp các lớp tiện ích không thuộc logic nghiệp vụ cụ thể.
-*   `DateUtils`: Xử lý ngày tháng.
-*   `StringUtils`: Xử lý chuỗi.
-*   `JsonUtils`: Xử lý JSON (sử dụng Jackson hoặc Gson).
-
-### 4. Config
-
-Quản lý cấu hình ứng dụng một cách linh hoạt.
-
-*   **Externalized Configuration:** Sử dụng `application.yml` (hoặc `.properties`) với các profile (`application-dev.yml`, `application-prod.yml`).
-*   **Type-Safe Configuration:** Sử dụng `@ConfigurationProperties` để liên kết các thuộc tính cấu hình với các đối tượng Java (POJO), thay vì dùng `@Value`.
-
----
-
-## IV. Bước 3: Module hoá các tầng ứng dụng
-
-### 1. Module `persistence`
-
-Chịu trách nhiệm truy cập và thao tác với dữ liệu.
-
-*   **Cấu trúc:**
-    *   `entities`/`domain`: Chứa các class được đánh dấu `@Entity`.
-    *   `repositories`: Chứa các interface kế thừa từ `JpaRepository`.
-*   **Nguyên tắc:** Chỉ chứa logic liên quan đến dữ liệu, không chứa business logic.
-
-### 2. Module `service`
-
-Chứa toàn bộ logic nghiệp vụ (business logic).
-
-*   **Cấu trúc:**
-    *   `services`: Chứa các interface định nghĩa chức năng nghiệp vụ.
-    *   `services.impl`: Chứa các lớp triển khai.
-*   **Giao dịch (Transactions):** Sử dụng `@Transactional` ở cấp độ service.
-*   **Nguyên tắc:** Gọi đến module `persistence` để thao tác dữ liệu, không biết về lớp API.
-
-### 3. Module `api`
-
-Cửa ngõ của ứng dụng, xử lý request/response.
-
-*   **Cấu trúc:**
-    *   `controllers`: Chứa các REST controller.
-    *   `dtos` (Data Transfer Objects): Các đối tượng dùng để truyền dữ liệu giữa client và server.
-    *   `mappers`: Các lớp chuyển đổi giữa DTO và Entity.
-*   **Validation:** Sử dụng Bean Validation (`@Valid`) để kiểm tra dữ liệu đầu vào.
-
-### 4. Module `security`
-
-Chịu trách nhiệm xác thực (authentication) và phân quyền (authorization).
-
-*   **Công nghệ:** Tích hợp **Spring Security**.
-*   **Xác thực:** Sử dụng **JWT (JSON Web Tokens)** cho RESTful API.
-*   **Phân quyền:** Sử dụng `@PreAuthorize` để kiểm soát quyền truy cập dựa trên vai trò.
-*   **Thực tiễn tốt nhất:**
-    *   Luôn dùng HTTPS trong môi trường production.
-    *   Bảo vệ chống lại tấn công CSRF, XSS.
-    *   Mã hóa mật khẩu bằng BCrypt.
-
----
-
-## V. Bước 4: Tối ưu hiệu suất
-
-*   **Cache:**
-    *   Sử dụng Spring's Cache Abstraction (`@EnableCaching`, `@Cacheable`, `@CacheEvict`).
-    *   Tích hợp với **Caffeine** (in-memory) hoặc **Redis** (distributed cache).
-*   **Asynchronous Processing:**
-    *   Sử dụng `@Async` cho các tác vụ tốn thời gian không cần chờ kết quả ngay (gửi email, xử lý log).
-*   **Connection Pool:**
-    *   Spring Boot mặc định dùng **HikariCP**. Tinh chỉnh các thông số trong `application.yml` (`maximum-pool-size`, `connection-timeout`).
-*   **Monitoring và Profiling:**
-    *   **Monitoring:** Tích hợp **Spring Boot Actuator**, **Micrometer**, **Prometheus**, và **Grafana**.
-    *   **Profiling:** Sử dụng **VisualVM** hoặc **JProfiler** để tìm kiếm các điểm nghẽn (bottlenecks).
-
----
-
-## VI. Bước 5: Kết nối đa cơ sở dữ liệu
-
-*   **MySQL, PostGreSql, SQL (Multiple Relational Databases):**
-    *   Định nghĩa nhiều `DataSource` trong `application.yml` với các prefix khác nhau.
-    *   Tạo các lớp cấu hình riêng biệt cho mỗi `DataSource`, `EntityManagerFactory`, và `TransactionManager`.
-*   **NoSQL (ví dụ: MongoDB):**
-    *   Thêm dependency `spring-boot-starter-data-mongodb`.
-    *   Cấu hình thông tin kết nối và tạo các `MongoRepository`.
-*   **Cache (ví dụ: Redis):**
-    *   Thêm `spring-boot-starter-data-redis`.
-    *   Cấu hình kết nối Redis để làm cache, message broker, hoặc primary database.
-
----
-
-## VII. Bước 6: Đảm bảo Core Module dễ mở rộng và bảo trì
-
-*   **Lập trình theo Interface:** Luôn định nghĩa interface cho service và inject interface thay vì implementation.
-*   **Constructor Injection:** Ưu tiên dùng constructor injection để làm rõ các dependency và dễ viết unit test.
-*   **Sử dụng BOM (Bill of Materials):** Tạo một custom BOM trong project cha để quản lý phiên bản của tất cả các dependency, đảm bảo tính nhất quán.
-*   **Tuân thủ nguyên tắc SOLID:** Áp dụng các nguyên tắc SOLID để xây dựng các thành phần có tính gắn kết cao và khớp nối lỏng.
+8. Final notes (accuracy & professionalism)
+	• This agent focuses on deterministic policy enforcement and auditable decisions.
+	• The code is intentionally modular: policy logic, sanitizer, rate limiter, and model client are separate so you can harden and replace them independently.
+	• For production, secure audit storage, hardened PII redaction, and distributed rate limiting are mandatory.
+Would you like me to:
+	• generate a full Maven project skeleton with these classes, or
+	• implement a concrete ModelClient for a provider (OpenAI/Anthropic/local LLM), or
+	• produce a runnable Docker + sample policy file and unit tests?
+Say which and I’ll produce the code/files immediately.

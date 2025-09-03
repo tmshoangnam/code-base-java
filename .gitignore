@@ -1,12 +1,10 @@
 HELP.md
-target/
 .mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
 
 # Target folders
 **/target/
-
+#java-base-parent.iml/java-base-core/target/site/jacoco/jacoco.csv
+#java-base-bom/target/
 # Compiled class files
 *.class
 
