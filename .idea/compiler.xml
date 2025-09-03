@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="java-base-starter" />
+        <module name="java-base-core" />
+        <module name="java-base-security" />
+        <module name="java-base-observability" />
+        <module name="java-base-cache" />
+      </profile>
+    </annotationProcessing>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="java-base-bom" options="-parameters -Xlint:unchecked -Xlint:deprecation" />
+      <module name="java-base-cache" options="-parameters -Xlint:unchecked -Xlint:deprecation" />
+      <module name="java-base-core" options="-parameters -Xlint:unchecked -Xlint:deprecation" />
+      <module name="java-base-observability" options="-parameters -Xlint:unchecked -Xlint:deprecation" />
+      <module name="java-base-parent" options="-parameters -Xlint:unchecked -Xlint:deprecation" />
+      <module name="java-base-security" options="-parameters -Xlint:unchecked -Xlint:deprecation" />
+      <module name="java-base-starter" options="-parameters -Xlint:unchecked -Xlint:deprecation" />
+    </option>
+  </component>
+</project>

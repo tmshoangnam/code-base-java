@@ -1,3 +1,0 @@
-# Auto-configuration
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.mycompany.base.starter.resilience.ResilienceAutoConfiguration

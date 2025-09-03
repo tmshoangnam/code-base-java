@@ -2,11 +2,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    
+
     <!-- Parent Information -->
     <groupId>com.mycompany.base</groupId>
     <artifactId>java-base-parent</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <scm>
         <connection>scm:git:git@github.com:fg-hoangnam/code-base-java.git</connection>
         <developerConnection>scm:git:git@github.com:fg-hoangnam/code-base-java.git</developerConnection>
@@ -16,7 +16,7 @@
     <packaging>pom</packaging>
     <name>java-base-parent</name>
     <description>Enterprise-grade foundation libraries for Spring Boot applications</description>
-    
+
     <!-- Module Structure -->
     <modules>
         <module>java-base-bom</module>
@@ -26,17 +26,17 @@
         <module>java-base-observability</module>
         <module>java-base-starter</module>
     </modules>
-    
+
     <!-- Properties -->
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        
+
         <!-- Spring Boot Version -->
         <spring.boot.version>3.3.2</spring.boot.version>
-        
+
         <!-- Core Dependency Versions -->
         <resilience4j.version>2.2.0</resilience4j.version>
         <nimbus-jose-jwt.version>9.37.3</nimbus-jose-jwt.version>
@@ -44,11 +44,11 @@
         <micrometer.version>1.13.4</micrometer.version>
         <opentelemetry.version>1.39.0</opentelemetry.version>
         <owasp-encoder.version>1.2.3</owasp-encoder.version>
-        
+
         <!-- Database & Cache Versions -->
         <h2.version>2.2.224</h2.version>
         <redis.version>3.2.1</redis.version>
-        
+
         <!-- Testing Versions -->
         <junit-jupiter.version>5.10.2</junit-jupiter.version>
         <assertj.version>3.25.3</assertj.version>
@@ -56,14 +56,14 @@
         <testcontainers.version>1.19.6</testcontainers.version>
         <wiremock.version>3.4.2</wiremock.version>
         <rest-assured.version>5.4.0</rest-assured.version>
-        
+
         <!-- Quality Tools -->
         <jacoco.version>0.8.11</jacoco.version>
         <sonar.version>3.10.0.2594</sonar.version>
         <owasp-dependency-check.version>8.4.3</owasp-dependency-check.version>
         <checkstyle.version>10.14.0</checkstyle.version>
         <spotbugs.version>4.8.3.0</spotbugs.version>
-        
+
         <!-- Plugin Versions -->
         <maven-surefire.version>3.2.5</maven-surefire.version>
         <maven-failsafe.version>3.2.5</maven-failsafe.version>
@@ -75,7 +75,7 @@
         <maven-source.version>3.3.0</maven-source.version>
         <maven-javadoc.version>3.6.3</maven-javadoc.version>
     </properties>
-    
+
     <!-- Dependency Management -->
     <dependencyManagement>
         <dependencies>
@@ -87,7 +87,7 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            
+
             <!-- Core Dependencies -->
             <dependency>
                 <groupId>io.github.resilience4j</groupId>
@@ -114,7 +114,7 @@
                 <artifactId>resilience4j-timelimiter</artifactId>
                 <version>${resilience4j.version}</version>
             </dependency>
-            
+
             <!-- Security Dependencies -->
             <dependency>
                 <groupId>com.nimbusds</groupId>
@@ -126,14 +126,14 @@
                 <artifactId>encoder</artifactId>
                 <version>${owasp-encoder.version}</version>
             </dependency>
-            
+
             <!-- Cache Dependencies -->
             <dependency>
                 <groupId>com.github.ben-manes.caffeine</groupId>
                 <artifactId>caffeine</artifactId>
                 <version>${caffeine.version}</version>
             </dependency>
-            
+
             <!-- Observability Dependencies -->
             <dependency>
                 <groupId>io.micrometer</groupId>
@@ -150,7 +150,7 @@
                 <artifactId>opentelemetry-api</artifactId>
                 <version>${opentelemetry.version}</version>
             </dependency>
-            
+
             <!-- Database Dependencies -->
             <dependency>
                 <groupId>com.h2database</groupId>
@@ -162,7 +162,7 @@
                 <artifactId>spring-data-redis</artifactId>
                 <version>${redis.version}</version>
             </dependency>
-            
+
             <!-- Test Dependencies -->
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
@@ -226,7 +226,7 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-    
+
     <!-- Build Configuration -->
     <build>
         <pluginManagement>
@@ -247,7 +247,7 @@
                         </compilerArgs>
                     </configuration>
                 </plugin>
-                
+
                 <!-- Maven Source Plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -262,7 +262,7 @@
                         </execution>
                     </executions>
                 </plugin>
-                
+
                 <!-- Maven Javadoc Plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -282,7 +282,7 @@
                         </execution>
                     </executions>
                 </plugin>
-                
+
                 <!-- Maven Surefire Plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -296,12 +296,9 @@
                         <excludes>
                             <exclude>**/*IT.java</exclude>
                         </excludes>
-                        <systemPropertyVariables>
-                            <java.util.logging.manager>org.apache.logging.log4j.jul.LogManager</java.util.logging.manager>
-                        </systemPropertyVariables>
                     </configuration>
                 </plugin>
-                
+
                 <!-- Maven Failsafe Plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -314,7 +311,7 @@
                         </includes>
                     </configuration>
                 </plugin>
-                
+
                 <!-- Maven Enforcer Plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -343,7 +340,7 @@
                         </execution>
                     </executions>
                 </plugin>
-                
+
                 <!-- JaCoCo Plugin -->
                 <plugin>
                     <groupId>org.jacoco</groupId>
@@ -384,14 +381,14 @@
                         </execution>
                     </executions>
                 </plugin>
-                
+
                 <!-- SonarQube Plugin -->
                 <plugin>
                     <groupId>org.sonarsource.scanner.maven</groupId>
                     <artifactId>sonar-maven-plugin</artifactId>
                     <version>${sonar.version}</version>
                 </plugin>
-                
+
                 <!-- OWASP Dependency Check -->
                 <plugin>
                     <groupId>org.owasp</groupId>
@@ -407,7 +404,7 @@
                         <skipRuntimeScope>true</skipRuntimeScope>
                     </configuration>
                 </plugin>
-                
+
                 <!-- Reproducible Build Plugin -->
                 <plugin>
                     <groupId>io.github.zlika</groupId>
@@ -421,14 +418,14 @@
                         </execution>
                     </executions>
                 </plugin>
-                
+
                 <!-- Maven Release Plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-release-plugin</artifactId>
                     <version>${maven-release.version}</version>
                 </plugin>
-                
+
                 <!-- Maven Deploy Plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -447,7 +444,7 @@
 
             </plugins>
         </pluginManagement>
-        
+
         <!-- Common Build Configuration -->
         <plugins>
             <plugin>
@@ -468,7 +465,7 @@
             </plugin>
         </plugins>
     </build>
-    
+
     <!-- Distribution Management -->
     <distributionManagement>
         <snapshotRepository>
@@ -482,7 +479,7 @@
             <url>http://localhost:8081/repository/maven-releases/</url>
         </repository>
     </distributionManagement>
-    
+
     <!-- Profiles -->
     <profiles>
         <!-- Release Profile -->
@@ -490,24 +487,24 @@
             <id>release</id>
             <build>
                 <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <version>3.2.4</version>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
+<!--                    <plugin>-->
+<!--                        <groupId>org.apache.maven.plugins</groupId>-->
+<!--                        <artifactId>maven-gpg-plugin</artifactId>-->
+<!--                        <version>3.2.4</version>-->
+<!--                        <executions>-->
+<!--                            <execution>-->
+<!--                                <id>sign-artifacts</id>-->
+<!--                                <phase>verify</phase>-->
+<!--                                <goals>-->
+<!--                                    <goal>sign</goal>-->
+<!--                                </goals>-->
+<!--                            </execution>-->
+<!--                        </executions>-->
+<!--                    </plugin>-->
                 </plugins>
             </build>
         </profile>
-        
+
         <!-- Quality Profile -->
         <profile>
             <id>quality</id>
@@ -528,7 +525,7 @@
                 </plugins>
             </build>
         </profile>
-        
+
         <!-- Development Profile -->
         <profile>
             <id>dev</id>

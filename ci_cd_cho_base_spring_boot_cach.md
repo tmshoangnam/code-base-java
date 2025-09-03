@@ -40,7 +40,7 @@ my-base/
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.mycompany.base</groupId>
   <artifactId>java-base-parent</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0.0</version>
   <packaging>pom</packaging>
   <modules>
     <module>java-base-bom</module>
@@ -103,7 +103,7 @@ my-base/
   <parent>
     <groupId>com.mycompany.base</groupId>
     <artifactId>java-base-parent</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
   </parent>
   <artifactId>java-base-bom</artifactId>
   <packaging>pom</packaging>
@@ -162,7 +162,7 @@ my-base/
   <parent>
     <groupId>com.mycompany.base</groupId>
     <artifactId>java-base-parent</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
   </parent>
   <artifactId>java-base-core</artifactId>
 
@@ -192,7 +192,7 @@ my-base/
   <parent>
     <groupId>com.mycompany.base</groupId>
     <artifactId>java-base-parent</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
   </parent>
   <artifactId>java-base-starter</artifactId>
 
@@ -290,7 +290,7 @@ jobs:
           server-password: MAVEN_PASSWORD
       - name: Set SNAPSHOT version (optional)
         run: |
-          mvn -B -ntp -q versions:set -DnewVersion=1.0.0-SNAPSHOT
+          mvn -B -ntp -q versions:set -DnewVersion=1.0.0
       - name: Deploy SNAPSHOT
         env:
           MAVEN_USERNAME: ${{ secrets.NEXUS_USER }}

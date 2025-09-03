@@ -31,7 +31,7 @@ graph LR
   <parent>
     <groupId>com.mycompany.base</groupId>
     <artifactId>java-base-parent</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
   </parent>
   <artifactId>java-base-bom</artifactId>
   <packaging>pom</packaging>
@@ -63,7 +63,7 @@ graph LR
     <dependency>
       <groupId>com.mycompany.base</groupId>
       <artifactId>java-base-bom</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
+      <version>1.0.0</version>
       <type>pom</type>
       <scope>import</scope>
     </dependency>

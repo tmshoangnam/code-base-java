@@ -2,25 +2,25 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    
+
     <parent>
         <groupId>com.mycompany.base</groupId>
         <artifactId>java-base-parent</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>1.0.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-    
+
     <artifactId>java-base-bom</artifactId>
     <packaging>pom</packaging>
     <name>java-base-bom</name>
     <description>Bill of Materials for my-base foundation libraries</description>
-    
+
     <!-- BOM Configuration -->
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
     </properties>
-    
+
     <!-- Dependency Management -->
     <dependencyManagement>
         <dependencies>
@@ -32,7 +32,7 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            
+
             <!-- Internal Modules -->
             <dependency>
                 <groupId>com.mycompany.base</groupId>
@@ -59,7 +59,7 @@
                 <artifactId>java-base-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            
+
             <!-- External Dependencies (not in Spring Boot) -->
             <dependency>
                 <groupId>io.github.resilience4j</groupId>
@@ -86,7 +86,7 @@
                 <artifactId>resilience4j-bulkhead</artifactId>
                 <version>${resilience4j.version}</version>
             </dependency>
-            
+
             <!-- Security Dependencies -->
             <dependency>
                 <groupId>com.nimbusds</groupId>
@@ -98,14 +98,14 @@
                 <artifactId>encoder</artifactId>
                 <version>${owasp-encoder.version}</version>
             </dependency>
-            
+
             <!-- Cache Dependencies -->
             <dependency>
                 <groupId>com.github.ben-manes.caffeine</groupId>
                 <artifactId>caffeine</artifactId>
                 <version>${caffeine.version}</version>
             </dependency>
-            
+
             <!-- Observability Dependencies -->
             <dependency>
                 <groupId>io.micrometer</groupId>
@@ -117,7 +117,7 @@
                 <artifactId>opentelemetry-api</artifactId>
                 <version>${opentelemetry.version}</version>
             </dependency>
-            
+
             <!-- Testing Dependencies -->
             <dependency>
                 <groupId>org.testcontainers</groupId>
@@ -139,7 +139,7 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-    
+
     <!-- Build Configuration -->
     <build>
         <plugins>

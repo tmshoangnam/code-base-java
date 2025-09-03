@@ -31,7 +31,7 @@ graph TD
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.mycompany.base</groupId>
   <artifactId>java-base-parent</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0.0</version>
   <packaging>pom</packaging>
   <modules>
     <module>java-base-bom</module>

@@ -1,4 +1,1 @@
-com\mycompany\base\core\exception\BaseException.class
-com\mycompany\base\core\resilience\ResilienceUtils.class
-com\mycompany\base\core\logging\LoggingUtils.class
-com\mycompany\base\core\validation\ValidationUtils.class
+com\mycompany\base\core\StringUtils.class
