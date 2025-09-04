@@ -3,9 +3,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.mycompany.base</groupId>
+        <groupId>io.github.tms-hoangnam</groupId>
         <artifactId>java-base-parent</artifactId>
-        <version>1.0.2-SNAPSHOT</version>
+        <version>1.0.2</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -13,10 +13,11 @@
     <packaging>jar</packaging>
     <name>java-base-core</name>
     <description>Core utilities for my-base foundation libraries</description>
+    <url>http://www.example.com/example-application</url>
 
     <dependencies>
         <!-- Core Dependencies - Minimal set for pure Java library -->
-        
+
         <!-- Logging API -->
         <dependency>
             <groupId>org.slf4j</groupId>

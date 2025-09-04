@@ -29,7 +29,7 @@ graph LR
 <project>
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>com.mycompany.base</groupId>
+    <groupId>io.github.tms-hoangnam</groupId>
     <artifactId>java-base-parent</artifactId>
     <version>1.0.0</version>
   </parent>
@@ -45,7 +45,7 @@ graph LR
         <scope>import</scope>
       </dependency>
       <dependency>
-        <groupId>com.mycompany.base</groupId>
+        <groupId>io.github.tms-hoangnam</groupId>
         <artifactId>java-base-core</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -61,7 +61,7 @@ graph LR
 <dependencyManagement>
   <dependencies>
     <dependency>
-      <groupId>com.mycompany.base</groupId>
+      <groupId>io.github.tms-hoangnam</groupId>
       <artifactId>java-base-bom</artifactId>
       <version>1.0.0</version>
       <type>pom</type>
@@ -72,7 +72,7 @@ graph LR
 
 <dependencies>
   <dependency>
-    <groupId>com.mycompany.base</groupId>
+    <groupId>io.github.tms-hoangnam</groupId>
     <artifactId>java-base-starter</artifactId>
   </dependency>
 </dependencies>

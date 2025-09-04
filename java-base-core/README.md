@@ -58,7 +58,7 @@ Enterprise-grade foundation library for Java applications providing common utili
 
 ```xml
 <dependency>
-    <groupId>com.mycompany.base</groupId>
+    <groupId>io.github.tms-hoangnam</groupId>
     <artifactId>java-base-core</artifactId>
     <version>1.0.1-SNAPSHOT</version>
 </dependency>

@@ -29,7 +29,7 @@ graph TD
 ```xml
 <project>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.mycompany.base</groupId>
+  <groupId>io.github.tms-hoangnam</groupId>
   <artifactId>java-base-parent</artifactId>
   <version>1.0.0</version>
   <packaging>pom</packaging>

@@ -3,9 +3,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.mycompany.base</groupId>
+        <groupId>io.github.tms-hoangnam</groupId>
         <artifactId>java-base-parent</artifactId>
-        <version>1.0.2-SNAPSHOT</version>
+        <version>1.0.2</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -13,7 +13,7 @@
     <packaging>pom</packaging>
     <name>java-base-bom</name>
     <description>Bill of Materials for my-base foundation libraries</description>
-
+    <url>http://www.example.com/example-application</url>
     <!-- BOM Configuration -->
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -34,27 +34,27 @@
 
             <!-- Internal Modules -->
             <dependency>
-                <groupId>com.mycompany.base</groupId>
+                <groupId>io.github.tms-hoangnam</groupId>
                 <artifactId>java-base-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.mycompany.base</groupId>
+                <groupId>io.github.tms-hoangnam</groupId>
                 <artifactId>java-base-security</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.mycompany.base</groupId>
+                <groupId>io.github.tms-hoangnam</groupId>
                 <artifactId>java-base-cache</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.mycompany.base</groupId>
+                <groupId>io.github.tms-hoangnam</groupId>
                 <artifactId>java-base-observability</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.mycompany.base</groupId>
+                <groupId>io.github.tms-hoangnam</groupId>
                 <artifactId>java-base-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
