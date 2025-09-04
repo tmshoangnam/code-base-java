@@ -74,7 +74,7 @@
         <rest-assured.version>5.4.0</rest-assured.version>
 
         <!-- Quality Tools -->
-        <jacoco.version>0.8.11</jacoco.version>
+        <jacoco.version>0.8.13</jacoco.version>
         <sonar.version>3.10.0.2594</sonar.version>
         <owasp-dependency-check.version>8.4.3</owasp-dependency-check.version>
         <checkstyle.version>10.14.0</checkstyle.version>
