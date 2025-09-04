@@ -12,7 +12,7 @@
         <connection>scm:git:git@github.com:tms-hoangnam/code-base-java.git</connection>
         <developerConnection>scm:git:git@github.com:tms-hoangnam/code-base-java.git</developerConnection>
         <url>https://github.com/tms-hoangnam/code-base-java</url>
-        <tag>java-base-parent-1.0.1</tag>
+        <tag>java-base-parent-1.0.2</tag>
     </scm>
 
     <packaging>pom</packaging>
@@ -479,11 +479,11 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
             </plugin>
-
+            <!--            pom, .asc-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-gpg-plugin</artifactId>
-                <version>1.6</version>
+                <version>3.0.1</version>
                 <executions>
                     <execution>
                         <id>sign-artifacts</id>
@@ -502,42 +502,8 @@
         <!-- Release Profile -->
         <profile>
             <id>release</id>
-            <!-- Distribution Management -->
-            <distributionManagement>
-                <repository>
-                    <id>ossrh</id>
-                    <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-                </repository>
-                <snapshotRepository>
-                    <id>ossrh</id>
-                    <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
-                </snapshotRepository>
-            </distributionManagement>
             <build>
                 <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-source-plugin</artifactId>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <version>3.2.4</version>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-
                     <plugin>
                         <groupId>org.sonatype.central</groupId>
                         <artifactId>central-publishing-maven-plugin</artifactId>
@@ -588,9 +554,6 @@
                     <url>http://localhost:8081/repository/maven-releases/</url>
                 </repository>
             </distributionManagement>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
             <properties>
                 <maven.test.skip>false</maven.test.skip>
                 <maven.javadoc.skip>true</maven.javadoc.skip>
