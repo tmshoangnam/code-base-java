@@ -62,7 +62,7 @@
         <owasp-encoder.version>1.2.3</owasp-encoder.version>
 
         <!-- Database & Cache Versions -->
-        <h2.version>2.2.224</h2.version>
+        <h2.version>2.3.232</h2.version>
         <redis.version>3.2.1</redis.version>
 
         <!-- Testing Versions -->
