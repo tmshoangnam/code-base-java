@@ -55,7 +55,7 @@
 
         <!-- Core Dependency Versions -->
         <resilience4j.version>2.2.0</resilience4j.version>
-        <nimbus-jose-jwt.version>9.37.3</nimbus-jose-jwt.version>
+        <nimbus-jose-jwt.version>10.4.2</nimbus-jose-jwt.version>
         <caffeine.version>3.1.8</caffeine.version>
         <micrometer.version>1.13.4</micrometer.version>
         <opentelemetry.version>1.39.0</opentelemetry.version>
