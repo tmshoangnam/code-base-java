@@ -38,7 +38,7 @@ my-base/
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>io.github.tms-hoangnam</groupId>
+  <groupId>io.github.tmshoangnam</groupId>
   <artifactId>java-base-parent</artifactId>
   <version>1.0.0</version>
   <packaging>pom</packaging>
@@ -101,7 +101,7 @@ my-base/
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>io.github.tms-hoangnam</groupId>
+    <groupId>io.github.tmshoangnam</groupId>
     <artifactId>java-base-parent</artifactId>
     <version>1.0.0</version>
   </parent>
@@ -119,28 +119,28 @@ my-base/
       </dependency>
       <!-- lock version libs khác tại đây -->
       <dependency>
-        <groupId>io.github.tms-hoangnam</groupId>
+        <groupId>io.github.tmshoangnam</groupId>
         <artifactId>java-base-core</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>io.github.tms-hoangnam</groupId>
+        <groupId>io.github.tmshoangnam</groupId>
         <artifactId>java-base-security</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>io.github.tms-hoangnam</groupId>
+        <groupId>io.github.tmshoangnam</groupId>
         <artifactId>java-base-cache</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>io.github.tms-hoangnam</groupId>
+        <groupId>io.github.tmshoangnam</groupId>
         <artifactId>java-base-observability</artifactId>
         <version>${project.version}</version>
         <optional>true</optional>
       </dependency>
       <dependency>
-        <groupId>io.github.tms-hoangnam</groupId>
+        <groupId>io.github.tmshoangnam</groupId>
         <artifactId>java-base-starter</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -160,7 +160,7 @@ my-base/
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>io.github.tms-hoangnam</groupId>
+    <groupId>io.github.tmshoangnam</groupId>
     <artifactId>java-base-parent</artifactId>
     <version>1.0.0</version>
   </parent>
@@ -190,7 +190,7 @@ my-base/
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>io.github.tms-hoangnam</groupId>
+    <groupId>io.github.tmshoangnam</groupId>
     <artifactId>java-base-parent</artifactId>
     <version>1.0.0</version>
   </parent>
@@ -198,7 +198,7 @@ my-base/
 
   <dependencies>
     <dependency>
-      <groupId>io.github.tms-hoangnam</groupId>
+      <groupId>io.github.tmshoangnam</groupId>
       <artifactId>java-base-core</artifactId>
     </dependency>
     <dependency>
@@ -510,7 +510,7 @@ Trong GitHub Actions, dùng `actions/setup-java` với `server-id`/`username`/`p
 <dependencyManagement>
   <dependencies>
     <dependency>
-      <groupId>io.github.tms-hoangnam</groupId>
+      <groupId>io.github.tmshoangnam</groupId>
       <artifactId>java-base-bom</artifactId>
       <version>1.0.0</version>
       <type>pom</type>
@@ -524,7 +524,7 @@ Trong GitHub Actions, dùng `actions/setup-java` với `server-id`/`username`/`p
 ```xml
 <dependencies>
   <dependency>
-    <groupId>io.github.tms-hoangnam</groupId>
+    <groupId>io.github.tmshoangnam</groupId>
     <artifactId>java-base-starter</artifactId>
   </dependency>
 </dependencies>

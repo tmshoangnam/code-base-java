@@ -28,7 +28,7 @@ BOM module import `spring-boot-dependencies` và khai báo versions cho:
 <dependencyManagement>
     <dependencies>
         <dependency>
-            <groupId>io.github.tms-hoangnam</groupId>
+            <groupId>io.github.tmshoangnam</groupId>
             <artifactId>java-base-bom</artifactId>
             <version>1.0.0</version>
             <type>pom</type>

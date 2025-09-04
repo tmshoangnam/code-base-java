@@ -3,15 +3,15 @@
     <modelVersion>4.0.0</modelVersion>
 
     <!-- Parent Information -->
-    <groupId>io.github.tms-hoangnam</groupId>
+    <groupId>io.github.tmshoangnam</groupId>
     <artifactId>java-base-parent</artifactId>
     <version>1.0.2</version>
     <url>http://www.example.com/example-application</url>
 
     <scm>
-        <connection>scm:git:git@github.com:tms-hoangnam/code-base-java.git</connection>
-        <developerConnection>scm:git:git@github.com:tms-hoangnam/code-base-java.git</developerConnection>
-        <url>https://github.com/tms-hoangnam/code-base-java</url>
+        <connection>scm:git:git@github.com:tmshoangnam/code-base-java.git</connection>
+        <developerConnection>scm:git:git@github.com:tmshoangnam/code-base-java.git</developerConnection>
+        <url>https://github.com/tmshoangnam/code-base-java</url>
         <tag>java-base-parent-1.0.2</tag>
     </scm>
 

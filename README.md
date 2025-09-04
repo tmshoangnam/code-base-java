@@ -35,7 +35,7 @@ java-base-parent (pom)
 <dependencyManagement>
     <dependencies>
         <dependency>
-            <groupId>io.github.tms-hoangnam</groupId>
+            <groupId>io.github.tmshoangnam</groupId>
             <artifactId>java-base-bom</artifactId>
             <version>1.0.0</version>
             <type>pom</type>
@@ -50,7 +50,7 @@ java-base-parent (pom)
 ```xml
 <dependencies>
     <dependency>
-        <groupId>io.github.tms-hoangnam</groupId>
+        <groupId>io.github.tmshoangnam</groupId>
         <artifactId>java-base-starter</artifactId>
     </dependency>
 </dependencies>

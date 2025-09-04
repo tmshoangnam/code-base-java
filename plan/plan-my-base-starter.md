@@ -57,21 +57,21 @@ graph TB
 ```xml
 <dependencies>
   <dependency>
-    <groupId>io.github.tms-hoangnam</groupId>
+    <groupId>io.github.tmshoangnam</groupId>
     <artifactId>java-base-core</artifactId>
   </dependency>
   <dependency>
-    <groupId>io.github.tms-hoangnam</groupId>
+    <groupId>io.github.tmshoangnam</groupId>
     <artifactId>java-base-security</artifactId>
     <optional>true</optional>
   </dependency>
   <dependency>
-    <groupId>io.github.tms-hoangnam</groupId>
+    <groupId>io.github.tmshoangnam</groupId>
     <artifactId>java-base-cache</artifactId>
     <optional>true</optional>
   </dependency>
   <dependency>
-    <groupId>io.github.tms-hoangnam</groupId>
+    <groupId>io.github.tmshoangnam</groupId>
     <artifactId>java-base-observability</artifactId>
     <optional>true</optional>
   </dependency>

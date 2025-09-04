@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>io.github.tms-hoangnam</groupId>
+        <groupId>io.github.tmshoangnam</groupId>
         <artifactId>java-base-parent</artifactId>
         <version>1.0.2</version>
         <relativePath>../pom.xml</relativePath>
@@ -18,19 +18,19 @@
     <dependencies>
         <!-- Internal Modules -->
         <dependency>
-            <groupId>io.github.tms-hoangnam</groupId>
+            <groupId>io.github.tmshoangnam</groupId>
             <artifactId>java-base-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.github.tms-hoangnam</groupId>
+            <groupId>io.github.tmshoangnam</groupId>
             <artifactId>java-base-security</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.github.tms-hoangnam</groupId>
+            <groupId>io.github.tmshoangnam</groupId>
             <artifactId>java-base-cache</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.github.tms-hoangnam</groupId>
+            <groupId>io.github.tmshoangnam</groupId>
             <artifactId>java-base-observability</artifactId>
         </dependency>
 
@@ -39,7 +39,7 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>io.github.tms-hoangnam</groupId>
+                <groupId>io.github.tmshoangnam</groupId>
                 <artifactId>java-base-bom</artifactId>
                 <version>${project.version}</version>
                 <type>pom</type>
