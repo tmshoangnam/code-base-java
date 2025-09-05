@@ -5,7 +5,7 @@
     <!-- Parent Information -->
     <groupId>io.github.tmshoangnam</groupId>
     <artifactId>java-base-parent</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.4-SNAPSHOT</version>
     <url>http://www.example.com/example-application</url>
 
     <scm>
