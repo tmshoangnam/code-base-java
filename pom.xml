@@ -41,6 +41,7 @@
         <module>java-base-cache</module>
         <module>java-base-observability</module>
         <module>java-base-starter</module>
+        <module>java-base-starter-cache</module>
     </modules>
 
     <!-- Properties -->
