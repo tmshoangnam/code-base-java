@@ -1,0 +1,112 @@
+---
+alwaysApply: false
+---
+# 📐 Engineering Guidelines – Base Libraries
+
+Tài liệu này định nghĩa **nguyên tắc thiết kế & coding rule** áp dụng cho toàn bộ base libraries trong tổ chức.  
+Mục tiêu: đảm bảo **consistency, maintainability, scalability** và **developer experience**.
+
+---
+
+## 🎯 Nguyên tắc xuyên suốt
+1. **Contract-first**: abstraction tách rời implementation.  
+2. **Starter nhỏ gọn**: không ép project kéo dependency thừa.  
+3. **Backward compatibility**: tuân thủ semantic versioning, tránh breaking change.  
+4. **Observability first**: mọi module tích hợp metrics + tracing.  
+5. **Testability**: module nào cũng đi kèm test utilities.  
+
+---
+
+## 1. Contract-first
+- Luôn define **interface** hoặc **abstract class** cho mọi feature.  
+- Implementation để ở module riêng (`impl-*`).  
+- Các project chỉ được depend vào **contract module**, không depend trực tiếp vào implementation.  
+- Nếu có nhiều implementation → cung cấp **SPI (Service Provider Interface)** qua `META-INF/services`.  
+
+❌ Tránh:  
+- Code logic gắn chặt với thư viện ngoài.  
+- `*Util` class vừa chứa business logic vừa gọi external lib.  
+
+---
+
+## 2. Starter nhỏ gọn
+- Starter chỉ chứa **AutoConfiguration** + **properties binding**.  
+- Không add dependency ngoài trừ khi bắt buộc.  
+- Sử dụng `@ConditionalOnClass`, `@ConditionalOnMissingBean` để tránh ép buộc project phải dùng lib cụ thể.  
+- Chia starter nhỏ theo domain: `starter-core`, `starter-cache`, `starter-security`, `starter-observability`.  
+
+❌ Tránh:  
+- Một starter “all-in-one” kéo tất cả dependency.  
+
+---
+
+## 3. Backward Compatibility
+- Tuân thủ **Semantic Versioning (SemVer)**:  
+  - **MAJOR**: thay đổi breaking.  
+  - **MINOR**: thêm feature, vẫn backward-compatible.  
+  - **PATCH**: bug fix.  
+- Không rename/xóa public API trong minor/patch release.  
+- Deprecate bằng `@Deprecated` + message rõ ràng.  
+- Mỗi release phải có **CHANGELOG.md**.  
+
+❌ Tránh:  
+- Breaking change vì lý do “refactor cho đẹp hơn”.  
+
+---
+
+## 4. Observability First
+- Mọi module phải expose **metrics** (Micrometer) + **tracing hooks** (OpenTelemetry).  
+- Logging qua **SLF4J facade**, không hardcode log4j/logback.  
+- Không swallow exception, luôn log context (userId, traceId).  
+- CorrelationId/TraceId phải được propagate xuyên suốt.  
+
+❌ Tránh:  
+- Log thiếu context.  
+- Metrics/tracing chỉ thêm vào một số module, không đồng bộ.  
+
+---
+
+## 5. Testability
+- Mỗi module cần có **test utilities**: mock, stub, in-memory impl.  
+- Sử dụng **JUnit5 + AssertJ + Testcontainers** cho integration test.  
+- Coverage tối thiểu **80% line + branch**.  
+- Starter module phải có **Spring Boot integration test**.  
+- Naming convention:  
+  - Unit test: `*Test.java`.  
+  - Integration test: `*IT.java`.  
+
+❌ Tránh:  
+- Viết library mà chỉ test trong project chính.  
+- Test phụ thuộc external service mà không có Testcontainers.  
+
+---
+
+## 6. Coding Convention
+- **Java 17+**.  
+- Theo **Google Java Style Guide**, custom rules:  
+  - Indent 4 spaces.  
+  - Max line length: 120 chars.  
+  - Package naming: `io.github.org.base.module`.  
+- Static analysis: **Checkstyle + SpotBugs**.  
+- Lombok: chỉ dùng cho DTO/POJO, không dùng trong core contract.  
+- Không để “magic number” trong code → define constant.  
+- **Documentation**:  
+  - Public API phải có Javadoc.  
+  - Ví dụ usage cho contract trong `docs/usage.md`.  
+
+---
+
+## 7. Definition of Done (DoD)
+- ✅ Code + Unit test + Integration test.  
+- ✅ SonarQube pass + coverage ≥ 80%.  
+- ✅ Artifact được publish (Nexus/Maven Central).  
+- ✅ Docs cập nhật (Javadoc + usage guide).  
+
+---
+
+## 📌 References
+- [Google Java Style Guide](https://google.github.io/styleguide/javaguide.html)  
+- [Semantic Versioning](https://semver.org/)  
+- [Spring Boot AutoConfiguration](https://docs.spring.io/spring-boot/docs/current/reference/html/auto-configuration.html)  
+- [OpenTelemetry](https://opentelemetry.io/)  
+- [Micrometer Metrics](https://micrometer.io/)  

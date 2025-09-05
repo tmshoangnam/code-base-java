@@ -69,19 +69,18 @@ Enterprise-grade foundation library for Java applications providing common utili
 #### Resilience Patterns
 
 ```java
-import com.mycompany.base.core.api.resilience.ResilienceFactories;
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+
 
 // Create circuit breaker
-CircuitBreaker cb = ResilienceFactories.defaultCircuitBreakerRegistry()
-                                       .circuitBreaker("payment-service");
+CircuitBreaker cb=ResilienceFactories.defaultCircuitBreakerRegistry()
+        .circuitBreaker("payment-service");
 
 // Decorate operation
-Runnable decorated = CircuitBreaker.decorateRunnable(cb, () -> {
-    // External API call
-    paymentService.processPayment();
-});
-decorated.run();
+        Runnable decorated=CircuitBreaker.decorateRunnable(cb,()->{
+        // External API call
+        paymentService.processPayment();
+        });
+        decorated.run();
 ```
 
 #### Error Handling
@@ -109,19 +108,18 @@ Problem problem = new Problem(
 #### Structured Logging
 
 ```java
-import com.mycompany.base.core.api.logging.StructuredLogger;
-import com.mycompany.base.core.api.logging.CorrelationIdGenerator;
+
 
 // Generate correlation ID
-String correlationId = CorrelationIdGenerator.generate("payment");
+String correlationId=CorrelationIdGenerator.generate("payment");
 
 // Log business event
-StructuredLogger.logBusinessEvent(correlationId, "PAYMENT_PROCESSED", 
-    Map.of("amount", 99.99, "currency", "USD"));
+        StructuredLogger.logBusinessEvent(correlationId,"PAYMENT_PROCESSED",
+        Map.of("amount",99.99,"currency","USD"));
 
 // Log error
-StructuredLogger.logError(correlationId, "Payment failed", exception, 
-    Map.of("orderId", "order123"));
+        StructuredLogger.logError(correlationId,"Payment failed",exception,
+        Map.of("orderId","order123"));
 ```
 
 #### Common Utilities

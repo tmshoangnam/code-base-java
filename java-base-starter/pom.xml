@@ -21,19 +21,11 @@
             <groupId>io.github.tmshoangnam</groupId>
             <artifactId>java-base-core</artifactId>
         </dependency>
-        <dependency>
-            <groupId>io.github.tmshoangnam</groupId>
-            <artifactId>java-base-security</artifactId>
-        </dependency>
+
         <dependency>
             <groupId>io.github.tmshoangnam</groupId>
             <artifactId>java-base-cache</artifactId>
         </dependency>
-        <dependency>
-            <groupId>io.github.tmshoangnam</groupId>
-            <artifactId>java-base-observability</artifactId>
-        </dependency>
-
         <!-- Spring Boot Dependencies -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
