@@ -1,0 +1,40 @@
+# Demo configuration for java-base-starter-security
+base:
+  security:
+    type: jwt
+    jwt:
+      secret: demo-secret-key-that-is-long-enough-for-hs256-algorithm
+      expiration: PT1H
+      issuer: demo-app
+      audience: demo-app
+      algorithm: HS256
+      refresh-expiration: P7D
+    config:
+      enabled: true
+      jwt-enabled: true
+      oauth2-enabled: false
+      spring-security-enabled: true
+      default-roles: [USER]
+      default-permissions: [read:profile]
+
+# Server configuration
+server:
+  port: 8080
+
+# Logging configuration
+logging:
+  level:
+    io.github.base.starter.security: DEBUG
+    io.github.base.security: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# Management endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always

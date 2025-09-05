@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.AutoConfiguration=\
+io.github.base.starter.security.autoconfig.SecurityAutoConfiguration

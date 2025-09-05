@@ -6,11 +6,12 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="java-base-starter" />
+        <module name="java-base-starter-security" />
         <module name="java-base-core" />
-        <module name="java-base-security" />
         <module name="java-base-observability" />
         <module name="java-base-starter-cache" />
+        <module name="java-base-starter" />
+        <module name="java-base-security" />
         <module name="java-base-cache" />
       </profile>
     </annotationProcessing>
@@ -31,6 +32,7 @@
       <module name="java-base-starter (1)" options="-parameters -Xlint:unchecked -Xlint:deprecation" />
       <module name="java-base-starter (2)" options="-parameters -Xlint:unchecked -Xlint:deprecation" />
       <module name="java-base-starter-cache" options="-parameters -Xlint:unchecked -Xlint:deprecation" />
+      <module name="java-base-starter-security" options="-parameters -Xlint:unchecked -Xlint:deprecation" />
     </option>
   </component>
 </project>

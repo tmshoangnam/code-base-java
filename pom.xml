@@ -42,6 +42,7 @@
         <module>java-base-observability</module>
         <module>java-base-starter</module>
         <module>java-base-starter-cache</module>
+        <module>java-base-starter-security</module>
     </modules>
 
     <!-- Properties -->
