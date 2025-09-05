@@ -17,6 +17,7 @@ HELP.md
 mvnw
 mvnw.cmd
 *.ear
+apache-maven*
 
 ### STS ###
 .apt_generated
@@ -26,6 +27,14 @@ mvnw.cmd
 .settings
 .springBeans
 .sts4-cache
+
+
+examples/**
+examples/**/*
+examples/*
+examples/spring-boot-cache-example/**
+examples/spring-boot-cache-example/*
+examples/
 
 ### IntelliJ IDEA ###
 .idea
@@ -61,5 +70,6 @@ build/
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
 
 

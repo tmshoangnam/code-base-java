@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+io.github.base.starter.cache.autoconfig.CacheAutoConfiguration

@@ -5,14 +5,14 @@
     <!-- Parent Information -->
     <groupId>io.github.tmshoangnam</groupId>
     <artifactId>java-base-parent</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3-SNAPSHOT</version>
     <url>http://www.example.com/example-application</url>
 
     <scm>
         <connection>scm:git:git@github.com:tmshoangnam/code-base-java.git</connection>
         <developerConnection>scm:git:git@github.com:tmshoangnam/code-base-java.git</developerConnection>
         <url>https://github.com/tmshoangnam/code-base-java</url>
-        <tag>java-base-parent-1.0.2</tag>
+        <tag>java-base-parent-1.0.3-SNAPSHOT</tag>
     </scm>
 
     <packaging>pom</packaging>
@@ -64,6 +64,8 @@
         <!-- Database & Cache Versions -->
         <h2.version>2.2.224</h2.version>
         <redis.version>3.2.1</redis.version>
+        <lettuce.version>6.3.2.RELEASE</lettuce.version>
+        <jackson.version>2.17.2</jackson.version>
 
         <!-- Testing Versions -->
         <junit-jupiter.version>5.10.2</junit-jupiter.version>
@@ -148,6 +150,28 @@
                 <groupId>com.github.ben-manes.caffeine</groupId>
                 <artifactId>caffeine</artifactId>
                 <version>${caffeine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.lettuce</groupId>
+                <artifactId>lettuce-core</artifactId>
+                <version>${lettuce.version}</version>
+            </dependency>
+
+            <!-- Serialization Dependencies -->
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+                <version>${jackson.version}</version>
             </dependency>
 
             <!-- Observability Dependencies -->
@@ -298,36 +322,6 @@
                         </execution>
                     </executions>
                 </plugin>
-
-                <!-- Maven Surefire Plugin -->
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <version>${maven-surefire.version}</version>
-                    <configuration>
-                        <argLine>@{argLine}</argLine>
-                        <includes>
-                            <include>**/*Test.java</include>
-                        </includes>
-                        <excludes>
-                            <exclude>**/*IT.java</exclude>
-                        </excludes>
-                    </configuration>
-                </plugin>
-
-                <!-- Maven Failsafe Plugin -->
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-failsafe-plugin</artifactId>
-                    <version>${maven-failsafe.version}</version>
-                    <configuration>
-                        <argLine>@{argLine}</argLine>
-                        <includes>
-                            <include>**/*IT.java</include>
-                        </includes>
-                    </configuration>
-                </plugin>
-
                 <!-- Maven Enforcer Plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
