@@ -1,0 +1,2 @@
+io.github.base.starter.cache.caffeine.CaffeineCacheProvider
+io.github.base.starter.cache.redis.RedisCacheProvider

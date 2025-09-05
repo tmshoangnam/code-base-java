@@ -1,0 +1,69 @@
+{
+  "groups": [
+    {
+      "name": "base.cache",
+      "type": "java.lang.Object",
+      "sourceType": "io.github.base.starter.cache.autoconfig.CacheAutoConfiguration"
+    },
+    {
+      "name": "base.cache.caffeine",
+      "type": "io.github.base.starter.cache.autoconfig.CaffeineProperties",
+      "sourceType": "io.github.base.starter.cache.autoconfig.CaffeineProperties"
+    },
+    {
+      "name": "base.cache.redis",
+      "type": "io.github.base.starter.cache.autoconfig.RedisProperties",
+      "sourceType": "io.github.base.starter.cache.autoconfig.RedisProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "base.cache.provider",
+      "type": "java.lang.String",
+      "description": "Cache provider to use. Supported values: caffeine, redis",
+      "defaultValue": "caffeine"
+    },
+    {
+      "name": "base.cache.caffeine.ttl-seconds",
+      "type": "java.lang.Long",
+      "description": "Time-to-live in seconds for cache entries",
+      "defaultValue": 60
+    },
+    {
+      "name": "base.cache.caffeine.max-size",
+      "type": "java.lang.Long",
+      "description": "Maximum number of entries in each cache",
+      "defaultValue": 10000
+    },
+    {
+      "name": "base.cache.redis.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether Redis cache provider is enabled",
+      "defaultValue": true
+    },
+    {
+      "name": "base.cache.redis.url",
+      "type": "java.lang.String",
+      "description": "Redis server URL",
+      "defaultValue": "redis://localhost:6379"
+    },
+    {
+      "name": "base.cache.redis.namespace",
+      "type": "java.lang.String",
+      "description": "Namespace prefix for all cache keys",
+      "defaultValue": "base"
+    },
+    {
+      "name": "base.cache.redis.connection-timeout",
+      "type": "java.lang.Integer",
+      "description": "Connection timeout in milliseconds",
+      "defaultValue": 2000
+    },
+    {
+      "name": "base.cache.redis.command-timeout",
+      "type": "java.lang.Integer",
+      "description": "Command timeout in milliseconds",
+      "defaultValue": 5000
+    }
+  ]
+}
