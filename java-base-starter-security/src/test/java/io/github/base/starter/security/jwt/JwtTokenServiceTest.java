@@ -92,9 +92,9 @@ class JwtTokenServiceTest {
         String token = tokenService.issueToken(claims);
         Map<String, Object> parsedClaims = tokenService.parseToken(token);
 
-        assertThat(parsedClaims).containsEntry("sub", "user123");
-        assertThat(parsedClaims).containsEntry("name", "John Doe");
-        assertThat(parsedClaims).containsEntry("email", "john@example.com");
+        assertThat(parsedClaims).containsEntry("sub", "user123")
+                .containsEntry("name", "John Doe")
+                .containsEntry("email", "john@example.com");
     }
 
     @Test
@@ -141,8 +141,8 @@ class JwtTokenServiceTest {
         String originalToken = tokenService.issueToken(Map.of("sub", "user123", "name", "John Doe"));
         String refreshedToken = tokenService.refreshToken(originalToken);
 
-        assertThat(refreshedToken).isNotNull();
-        assertThat(refreshedToken).isNotEqualTo(originalToken);
+        assertThat(refreshedToken).isNotNull()
+        .isNotEqualTo(originalToken);
         assertThat(tokenService.getSubject(refreshedToken)).isEqualTo("user123");
         assertThat(tokenService.getClaimValue(refreshedToken, "name")).isEqualTo("John Doe");
     }

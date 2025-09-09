@@ -55,7 +55,7 @@ public class CacheAutoConfiguration {
         @ConditionalOnMissingBean
         public CacheProvider caffeineCacheProvider(CaffeineProperties properties) {
             logger.info("Configuring Caffeine cache provider with TTL: {}s, MaxSize: {}",
-                       properties.getTtlSeconds(), properties.getMaxSize());
+                    properties.getTtlSeconds(), properties.getMaxSize());
             return new CaffeineCacheProvider(
                     properties.getTtlSeconds(),
                     properties.getMaxSize()
@@ -79,7 +79,7 @@ public class CacheAutoConfiguration {
         public CacheProvider redisCacheProvider(RedisProperties properties, CaffeineProperties caffeineProperties) {
             try {
                 logger.info("Configuring Redis cache provider with URL: {}, Namespace: {}",
-                           properties.getUrl(), properties.getNamespace());
+                        properties.getUrl(), properties.getNamespace());
                 return new RedisCacheProvider(
                         properties.getUrl(),
                         new StringSerializer(),
@@ -92,6 +92,29 @@ public class CacheAutoConfiguration {
                         caffeineProperties.getMaxSize()
                 );
             }
+        }
+    }
+
+    /**
+     * Fallback configuration for when Redis is disabled but provider is set to redis.
+     * <p>
+     * This configuration provides a Caffeine fallback when Redis is explicitly disabled.
+     */
+    @ConditionalOnClass(name = "com.github.benmanes.caffeine.cache.Cache")
+    @ConditionalOnProperty(name = "base.cache.provider", havingValue = "redis")
+
+    static class RedisFallbackAutoConfiguration {
+
+        @Bean
+        @ConditionalOnMissingBean
+        @ConditionalOnProperty(name = "base.cache.redis.enabled", havingValue = "false")
+        public CacheProvider caffeineFallbackProvider(CaffeineProperties properties) {
+            logger.info("Redis is disabled, falling back to Caffeine cache provider with TTL: {}s, MaxSize: {}",
+                    properties.getTtlSeconds(), properties.getMaxSize());
+            return new CaffeineCacheProvider(
+                    properties.getTtlSeconds(),
+                    properties.getMaxSize()
+            );
         }
     }
 

@@ -13,6 +13,8 @@ import io.github.base.security.api.AuthPrincipal;
 import io.github.base.security.api.SecurityException;
 import io.github.base.security.api.TokenService;
 import io.github.base.security.model.Claim;
+import io.github.base.security.model.Permission;
+import io.github.base.security.model.Role;
 import io.github.base.starter.security.autoconfig.SecurityProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,10 +22,7 @@ import org.springframework.util.StringUtils;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * JWT implementation of TokenService.
@@ -69,12 +68,14 @@ public class JwtTokenService implements TokenService {
                     .issuer(jwtProperties.getIssuer())
                     .audience(jwtProperties.getAudience())
                     .issueTime(Date.from(now))
-                    .expirationTime(Date.from(expiresAt));
+                    .expirationTime(Date.from(expiresAt))
+                    .jwtID(UUID.randomUUID().toString());
 
             // Add custom claims
             for (Map.Entry<String, Object> entry : claims.entrySet()) {
                 claimsBuilder.claim(entry.getKey(), entry.getValue());
             }
+
 
             JWTClaimsSet jwtClaims = claimsBuilder.build();
             SignedJWT signedJWT = new SignedJWT(new JWSHeader(algorithm), jwtClaims);
@@ -111,7 +112,7 @@ public class JwtTokenService implements TokenService {
             // Add roles
             if (principal.getRoles() != null && !principal.getRoles().isEmpty()) {
                 claimsBuilder.claim("roles", principal.getRoles().stream()
-                        .map(role -> role.getName())
+                        .map(Role::getName)
                         .toArray(String[]::new));
             }
 
@@ -119,7 +120,7 @@ public class JwtTokenService implements TokenService {
             if (principal.getRoles() != null) {
                 claimsBuilder.claim("permissions", principal.getRoles().stream()
                         .flatMap(role -> role.getPermissions().stream())
-                        .map(permission -> permission.getName())
+                        .map(Permission::getName)
                         .distinct()
                         .toArray(String[]::new));
             }
@@ -224,8 +225,8 @@ public class JwtTokenService implements TokenService {
     public long getExpirationTime(String token) throws SecurityException {
         Map<String, Object> claims = parseToken(token);
         Object exp = claims.get("exp");
-        if (exp instanceof Date) {
-            return ((Date) exp).getTime();
+        if (exp instanceof Date date) {
+            return date.getTime();
         }
         return -1;
     }
@@ -235,8 +236,8 @@ public class JwtTokenService implements TokenService {
         try {
             Map<String, Object> claims = parseToken(token);
             Object exp = claims.get("exp");
-            if (exp instanceof Date) {
-                long expirationTime = ((Date) exp).getTime();
+            if (exp instanceof Date date) {
+                long expirationTime = date.getTime();
                 return System.currentTimeMillis() > expirationTime;
             }
             return false;
@@ -255,6 +256,7 @@ public class JwtTokenService implements TokenService {
         claimsCopy.remove("iat");
         claimsCopy.remove("exp");
         claimsCopy.remove("nbf");
+        claimsCopy.remove("jti");
 
         return issueToken(claimsCopy, jwtProperties.getExpiration());
     }
