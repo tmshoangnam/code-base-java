@@ -1,0 +1,6 @@
+io.github.base.starter.file.aws.s3.S3ServiceProvider
+io.github.base.starter.file.aws.sqs.SqsServiceProvider
+io.github.base.starter.file.aws.sns.SnsServiceProvider
+io.github.base.starter.file.aws.lambda.LambdaServiceProvider
+io.github.base.starter.file.aws.dynamodb.DynamoDbServiceProvider
+io.github.base.starter.file.aws.secrets.SecretsManagerServiceProvider

@@ -38,6 +38,7 @@
                 <artifactId>java-base-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <!-- Internal Modules for Starters -->
             <dependency>
                 <groupId>io.github.tmshoangnam</groupId>
                 <artifactId>java-base-security</artifactId>
@@ -45,17 +46,13 @@
             </dependency>
             <dependency>
                 <groupId>io.github.tmshoangnam</groupId>
+                <artifactId>java-base-starter-security</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <!-- Internal Modules for Cache -->
+            <dependency>
+                <groupId>io.github.tmshoangnam</groupId>
                 <artifactId>java-base-cache</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.github.tmshoangnam</groupId>
-                <artifactId>java-base-observability</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.github.tmshoangnam</groupId>
-                <artifactId>java-base-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -63,12 +60,34 @@
                 <artifactId>java-base-starter-cache</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <!-- Internal Modules for File -->
             <dependency>
                 <groupId>io.github.tmshoangnam</groupId>
-                <artifactId>java-base-starter-security</artifactId>
+                <artifactId>java-base-file</artifactId>
                 <version>${project.version}</version>
             </dependency>
-
+            <dependency>
+                <groupId>io.github.tmshoangnam</groupId>
+                <artifactId>java-base-aws</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.tmshoangnam</groupId>
+                <artifactId>java-base-starter-file</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <!-- Internal Modules for Observability -->
+            <dependency>
+                <groupId>io.github.tmshoangnam</groupId>
+                <artifactId>java-base-observability</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <!-- Internal Modules for Starter -->
+            <dependency>
+                <groupId>io.github.tmshoangnam</groupId>
+                <artifactId>java-base-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <!-- External Dependencies (not in Spring Boot) -->
             <dependency>
                 <groupId>io.github.resilience4j</groupId>

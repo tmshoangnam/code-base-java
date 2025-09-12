@@ -40,9 +40,12 @@
         <module>java-base-security</module>
         <module>java-base-cache</module>
         <module>java-base-observability</module>
+        <module>java-base-file</module>
+        <module>java-base-aws</module>
         <module>java-base-starter</module>
         <module>java-base-starter-cache</module>
         <module>java-base-starter-security</module>
+        <module>java-base-starter-file</module>
     </modules>
 
     <!-- Properties -->

@@ -1,0 +1,4 @@
+io.github.base.starter.file.impl.local.LocalFileStorageProvider
+io.github.base.starter.file.impl.s3.S3FileStorageProvider
+io.github.base.starter.file.impl.gcs.GcsFileStorageProvider
+io.github.base.starter.file.impl.azure.AzureFileStorageProvider
