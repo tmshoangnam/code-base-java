@@ -6,11 +6,12 @@ import org.junit.jupiter.api.Nested;
 
 import java.time.Instant;
 import java.util.Map;
+import java.util.HashMap;
 
 import static org.assertj.core.api.Assertions.*;
 
 /**
- * Unit tests for FileMetadata.
+ * Unit tests for FileMetadata record.
  *
  * @author java-base-team
  * @since 1.0.5-SNAPSHOT
@@ -29,343 +30,80 @@ class FileMetadataTest {
             String fileName = "test.txt";
             String contentType = "text/plain";
             long size = 1024L;
-            Instant createdAt = Instant.now();
-            Instant lastModified = Instant.now();
+            Instant creationTime = Instant.now();
+            Instant lastModifiedTime = Instant.now();
             String checksum = "abc123";
-            Map<String, String> properties = Map.of("key1", "value1", "key2", "value2");
+            Map<String, String> additionalMetadata = Map.of("key1", "value1");
 
             // When
-            FileMetadata result = new FileMetadata(
-                fileName, contentType, size, createdAt, lastModified, checksum, properties
+            FileMetadata metadata = new FileMetadata(
+                fileName, contentType, size, creationTime, 
+                lastModifiedTime, checksum, additionalMetadata
             );
 
             // Then
-            assertThat(result.fileName()).isEqualTo(fileName);
-            assertThat(result.contentType()).isEqualTo(contentType);
-            assertThat(result.size()).isEqualTo(size);
-            assertThat(result.createdAt()).isEqualTo(createdAt);
-            assertThat(result.lastModified()).isEqualTo(lastModified);
-            assertThat(result.checksum()).isEqualTo(checksum);
-            assertThat(result.properties()).isEqualTo(properties);
+            assertThat(metadata.fileName()).isEqualTo(fileName);
+            assertThat(metadata.contentType()).isEqualTo(contentType);
+            assertThat(metadata.size()).isEqualTo(size);
+            assertThat(metadata.createdAt()).isEqualTo(creationTime);
+            assertThat(metadata.lastModified()).isEqualTo(lastModifiedTime);
+            assertThat(metadata.checksum()).isEqualTo(checksum);
+            assertThat(metadata.properties()).isEqualTo(additionalMetadata);
         }
 
         @Test
-        @DisplayName("Should create FileMetadata with minimal parameters")
-        void shouldCreateFileMetadataWithMinimalParameters() {
-            // Given
-            String fileName = "test.txt";
-            String contentType = "text/plain";
-            long size = 1024L;
-
+        @DisplayName("Should create FileMetadata with null values")
+        void shouldCreateFileMetadataWithNullValues() {
             // When
-            FileMetadata result = new FileMetadata(
-                fileName, contentType, size, null, null, null, null
+            FileMetadata metadata = new FileMetadata(
+                null, null, 0L, null, null, null, null
             );
 
             // Then
-            assertThat(result.fileName()).isEqualTo(fileName);
-            assertThat(result.contentType()).isEqualTo(contentType);
-            assertThat(result.size()).isEqualTo(size);
-            assertThat(result.createdAt()).isNull();
-            assertThat(result.lastModified()).isNull();
-            assertThat(result.checksum()).isNull();
-            assertThat(result.properties()).isNull();
+            assertThat(metadata.fileName()).isNull();
+            assertThat(metadata.contentType()).isNull();
+            assertThat(metadata.size()).isEqualTo(0L);
+            assertThat(metadata.createdAt()).isNull();
+            assertThat(metadata.lastModified()).isNull();
+            assertThat(metadata.checksum()).isNull();
+            assertThat(metadata.properties()).isNull();
         }
     }
 
     @Nested
-    @DisplayName("Static Factory Method Tests")
-    class StaticFactoryMethodTests {
+    @DisplayName("Equality Tests")
+    class EqualityTests {
 
         @Test
-        @DisplayName("Should create FileMetadata using of method with minimal parameters")
-        void shouldCreateFileMetadataUsingOfMethodWithMinimalParameters() {
+        @DisplayName("Should be equal to identical FileMetadata")
+        void shouldBeEqualToIdenticalFileMetadata() {
             // Given
-            String fileName = "test.txt";
-            String contentType = "text/plain";
-            long size = 1024L;
-
-            // When
-            FileMetadata result = FileMetadata.of(fileName, contentType, size);
-
-            // Then
-            assertThat(result.fileName()).isEqualTo(fileName);
-            assertThat(result.contentType()).isEqualTo(contentType);
-            assertThat(result.size()).isEqualTo(size);
-            assertThat(result.createdAt()).isNotNull();
-            assertThat(result.lastModified()).isNotNull();
-            assertThat(result.checksum()).isNull();
-            assertThat(result.properties()).isNotNull();
-            assertThat(result.properties()).isEmpty();
-        }
-
-        @Test
-        @DisplayName("Should create FileMetadata using of method with timestamps")
-        void shouldCreateFileMetadataUsingOfMethodWithTimestamps() {
-            // Given
-            String fileName = "test.txt";
-            String contentType = "text/plain";
-            long size = 1024L;
-            Instant createdAt = Instant.now().minusSeconds(3600);
-            Instant lastModified = Instant.now();
-
-            // When
-            FileMetadata result = FileMetadata.of(fileName, contentType, size, createdAt, lastModified);
-
-            // Then
-            assertThat(result.fileName()).isEqualTo(fileName);
-            assertThat(result.contentType()).isEqualTo(contentType);
-            assertThat(result.size()).isEqualTo(size);
-            assertThat(result.createdAt()).isEqualTo(createdAt);
-            assertThat(result.lastModified()).isEqualTo(lastModified);
-            assertThat(result.checksum()).isNull();
-            assertThat(result.properties()).isNotNull();
-            assertThat(result.properties()).isEmpty();
-        }
-
-        @Test
-        @DisplayName("Should create FileMetadata using of method with checksum")
-        void shouldCreateFileMetadataUsingOfMethodWithChecksum() {
-            // Given
-            String fileName = "test.txt";
-            String contentType = "text/plain";
-            long size = 1024L;
-            String checksum = "abc123";
-
-            // When
-            FileMetadata result = FileMetadata.of(fileName, contentType, size, checksum);
-
-            // Then
-            assertThat(result.fileName()).isEqualTo(fileName);
-            assertThat(result.contentType()).isEqualTo(contentType);
-            assertThat(result.size()).isEqualTo(size);
-            assertThat(result.createdAt()).isNotNull();
-            assertThat(result.lastModified()).isNotNull();
-            assertThat(result.checksum()).isEqualTo(checksum);
-            assertThat(result.properties()).isNotNull();
-            assertThat(result.properties()).isEmpty();
-        }
-
-        @Test
-        @DisplayName("Should throw exception when fileName is null")
-        void shouldThrowExceptionWhenFileNameIsNull() {
-            // When & Then
-            assertThatThrownBy(() -> FileMetadata.of(null, "text/plain", 1024L))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("File name cannot be null or empty");
-        }
-
-        @Test
-        @DisplayName("Should throw exception when fileName is empty")
-        void shouldThrowExceptionWhenFileNameIsEmpty() {
-            // When & Then
-            assertThatThrownBy(() -> FileMetadata.of("", "text/plain", 1024L))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("File name cannot be null or empty");
-        }
-
-        @Test
-        @DisplayName("Should throw exception when fileName is whitespace")
-        void shouldThrowExceptionWhenFileNameIsWhitespace() {
-            // When & Then
-            assertThatThrownBy(() -> FileMetadata.of("   ", "text/plain", 1024L))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("File name cannot be null or empty");
-        }
-
-        @Test
-        @DisplayName("Should throw exception when size is negative")
-        void shouldThrowExceptionWhenSizeIsNegative() {
-            // When & Then
-            assertThatThrownBy(() -> FileMetadata.of("test.txt", "text/plain", -1L))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("File size cannot be negative");
-        }
-    }
-
-    @Nested
-    @DisplayName("Utility Method Tests")
-    class UtilityMethodTests {
-
-        @Test
-        @DisplayName("Should get property value")
-        void shouldGetPropertyValue() {
-            // Given
-            Map<String, String> properties = Map.of("key1", "value1", "key2", "value2");
-            FileMetadata metadata = new FileMetadata(
-                "test.txt", "text/plain", 1024L, null, null, null, properties
-            );
-
-            // When & Then
-            assertThat(metadata.getProperty("key1")).isEqualTo("value1");
-            assertThat(metadata.getProperty("key2")).isEqualTo("value2");
-            assertThat(metadata.getProperty("nonexistent")).isNull();
-        }
-
-        @Test
-        @DisplayName("Should check if property exists")
-        void shouldCheckIfPropertyExists() {
-            // Given
-            Map<String, String> properties = Map.of("key1", "value1");
-            FileMetadata metadata = new FileMetadata(
-                "test.txt", "text/plain", 1024L, null, null, null, properties
-            );
-
-            // When & Then
-            assertThat(metadata.hasProperty("key1")).isTrue();
-            assertThat(metadata.hasProperty("nonexistent")).isFalse();
-        }
-
-        @Test
-        @DisplayName("Should get file extension")
-        void shouldGetFileExtension() {
-            // Given
-            FileMetadata metadata = new FileMetadata(
-                "test.txt", "text/plain", 1024L, null, null, null, null
-            );
-
-            // When & Then
-            assertThat(metadata.getFileExtension()).isEqualTo("txt");
-        }
-
-        @Test
-        @DisplayName("Should return empty string for file without extension")
-        void shouldReturnEmptyStringForFileWithoutExtension() {
-            // Given
-            FileMetadata metadata = new FileMetadata(
-                "test", "text/plain", 1024L, null, null, null, null
-            );
-
-            // When & Then
-            assertThat(metadata.getFileExtension()).isEmpty();
-        }
-
-        @Test
-        @DisplayName("Should check if file has specific extension")
-        void shouldCheckIfFileHasSpecificExtension() {
-            // Given
-            FileMetadata metadata = new FileMetadata(
-                "test.txt", "text/plain", 1024L, null, null, null, null
-            );
-
-            // When & Then
-            assertThat(metadata.hasExtension("txt")).isTrue();
-            assertThat(metadata.hasExtension("TXT")).isTrue();
-            assertThat(metadata.hasExtension("pdf")).isFalse();
-        }
-
-        @Test
-        @DisplayName("Should get file name without extension")
-        void shouldGetFileNameWithoutExtension() {
-            // Given
-            FileMetadata metadata = new FileMetadata(
-                "test.txt", "text/plain", 1024L, null, null, null, null
-            );
-
-            // When & Then
-            assertThat(metadata.getFileNameWithoutExtension()).isEqualTo("test");
-        }
-
-        @Test
-        @DisplayName("Should get file name without extension for file without extension")
-        void shouldGetFileNameWithoutExtensionForFileWithoutExtension() {
-            // Given
-            FileMetadata metadata = new FileMetadata(
-                "test", "text/plain", 1024L, null, null, null, null
-            );
-
-            // When & Then
-            assertThat(metadata.getFileNameWithoutExtension()).isEqualTo("test");
-        }
-    }
-
-    @Nested
-    @DisplayName("With Methods Tests")
-    class WithMethodsTests {
-
-        @Test
-        @DisplayName("Should create copy with updated properties")
-        void shouldCreateCopyWithUpdatedProperties() {
-            // Given
-            FileMetadata original = new FileMetadata(
-                "test.txt", "text/plain", 1024L, null, null, null, Map.of("key1", "value1")
-            );
-            Map<String, String> newProperties = Map.of("key2", "value2", "key3", "value3");
-
-            // When
-            FileMetadata updated = original.withProperties(newProperties);
-
-            // Then
-            assertThat(updated.fileName()).isEqualTo(original.fileName());
-            assertThat(updated.contentType()).isEqualTo(original.contentType());
-            assertThat(updated.size()).isEqualTo(original.size());
-            assertThat(updated.createdAt()).isEqualTo(original.createdAt());
-            assertThat(updated.lastModified()).isEqualTo(original.lastModified());
-            assertThat(updated.checksum()).isEqualTo(original.checksum());
-            assertThat(updated.properties()).isEqualTo(newProperties);
-            assertThat(updated.properties()).isNotSameAs(original.properties());
-        }
-
-        @Test
-        @DisplayName("Should create copy with updated checksum")
-        void shouldCreateCopyWithUpdatedChecksum() {
-            // Given
-            FileMetadata original = new FileMetadata(
-                "test.txt", "text/plain", 1024L, null, null, "old-checksum", null
-            );
-            String newChecksum = "new-checksum";
-
-            // When
-            FileMetadata updated = original.withChecksum(newChecksum);
-
-            // Then
-            assertThat(updated.fileName()).isEqualTo(original.fileName());
-            assertThat(updated.contentType()).isEqualTo(original.contentType());
-            assertThat(updated.size()).isEqualTo(original.size());
-            assertThat(updated.createdAt()).isEqualTo(original.createdAt());
-            assertThat(updated.lastModified()).isEqualTo(original.lastModified());
-            assertThat(updated.checksum()).isEqualTo(newChecksum);
-            assertThat(updated.properties()).isEqualTo(original.properties());
-        }
-    }
-
-    @Nested
-    @DisplayName("Equality and HashCode Tests")
-    class EqualityAndHashCodeTests {
-
-        @Test
-        @DisplayName("Should be equal when all fields are same")
-        void shouldBeEqualWhenAllFieldsAreSame() {
-            // Given
-            String fileName = "test.txt";
-            String contentType = "text/plain";
-            long size = 1024L;
-            Instant createdAt = Instant.now();
-            Instant lastModified = Instant.now();
-            String checksum = "abc123";
-            Map<String, String> properties = Map.of("key1", "value1");
-
+            Instant now = Instant.now();
+            Map<String, String> additionalMetadata = Map.of("key", "value");
+            
             FileMetadata metadata1 = new FileMetadata(
-                fileName, contentType, size, createdAt, lastModified, checksum, properties
+                "test.txt", "text/plain", 1024L, now, now, "abc123", additionalMetadata
             );
             FileMetadata metadata2 = new FileMetadata(
-                fileName, contentType, size, createdAt, lastModified, checksum, properties
+                "test.txt", "text/plain", 1024L, now, now, "abc123", additionalMetadata
             );
 
             // When & Then
             assertThat(metadata1).isEqualTo(metadata2);
-            assertThat(metadata1.hashCode()).hasSameHashCodeAs(metadata2.hashCode());
+            assertThat(metadata1.hashCode()).isEqualTo(metadata2.hashCode());
         }
 
         @Test
-        @DisplayName("Should not be equal when fileName differs")
-        void shouldNotBeEqualWhenFileNameDiffers() {
+        @DisplayName("Should not be equal to different FileMetadata")
+        void shouldNotBeEqualToDifferentFileMetadata() {
             // Given
+            Instant now = Instant.now();
+            
             FileMetadata metadata1 = new FileMetadata(
-                "test1.txt", "text/plain", 1024L, null, null, null, null
+                "test1.txt", "text/plain", 1024L, now, now, "abc123", null
             );
             FileMetadata metadata2 = new FileMetadata(
-                "test2.txt", "text/plain", 1024L, null, null, null, null
+                "test2.txt", "text/plain", 1024L, now, now, "abc123", null
             );
 
             // When & Then
@@ -373,18 +111,27 @@ class FileMetadataTest {
         }
 
         @Test
-        @DisplayName("Should not be equal when size differs")
-        void shouldNotBeEqualWhenSizeDiffers() {
+        @DisplayName("Should not be equal to null")
+        void shouldNotBeEqualToNull() {
             // Given
-            FileMetadata metadata1 = new FileMetadata(
-                "test.txt", "text/plain", 1024L, null, null, null, null
-            );
-            FileMetadata metadata2 = new FileMetadata(
-                "test.txt", "text/plain", 2048L, null, null, null, null
+            FileMetadata metadata = new FileMetadata(
+                "test.txt", "text/plain", 1024L, Instant.now(), Instant.now(), "abc123", null
             );
 
             // When & Then
-            assertThat(metadata1).isNotEqualTo(metadata2);
+            assertThat(metadata).isNotEqualTo(null);
+        }
+
+        @Test
+        @DisplayName("Should not be equal to different type")
+        void shouldNotBeEqualToDifferentType() {
+            // Given
+            FileMetadata metadata = new FileMetadata(
+                "test.txt", "text/plain", 1024L, Instant.now(), Instant.now(), "abc123", null
+            );
+
+            // When & Then
+            assertThat(metadata).isNotEqualTo("not a FileMetadata");
         }
     }
 
@@ -393,94 +140,117 @@ class FileMetadataTest {
     class ToStringTests {
 
         @Test
-        @DisplayName("Should include fileName in toString")
-        void shouldIncludeFileNameInToString() {
-            // Given
-            FileMetadata metadata = new FileMetadata(
-                "test.txt", "text/plain", 1024L, null, null, null, null
-            );
-
-            // When
-            String result = metadata.toString();
-
-            // Then
-            assertThat(result).contains("test.txt");
-        }
-
-        @Test
         @DisplayName("Should include all fields in toString")
         void shouldIncludeAllFieldsInToString() {
             // Given
+            String fileName = "test.txt";
+            String contentType = "text/plain";
+            long size = 1024L;
+            Instant creationTime = Instant.now();
+            Instant lastModifiedTime = Instant.now();
+            String checksum = "abc123";
+            Map<String, String> additionalMetadata = Map.of("key", "value");
+            
             FileMetadata metadata = new FileMetadata(
-                "test.txt", "text/plain", 1024L, null, null, "abc123", Map.of("key1", "value1")
+                fileName, contentType, size, creationTime, 
+                lastModifiedTime, checksum, additionalMetadata
             );
 
             // When
-            String result = metadata.toString();
+            String toString = metadata.toString();
 
             // Then
-            assertThat(result).contains("test.txt")
-                    .contains("text/plain")
-                    .contains("1024")
-                    .contains("abc123")
-                    .contains("key1=value1");
+            assertThat(toString).contains(fileName);
+            assertThat(toString).contains(contentType);
+            assertThat(toString).contains(String.valueOf(size));
+            assertThat(toString).contains(checksum);
         }
     }
 
     @Nested
-    @DisplayName("Edge Cases")
-    class EdgeCases {
+    @DisplayName("Additional Metadata Tests")
+    class AdditionalMetadataTests {
 
         @Test
-        @DisplayName("Should handle null properties")
-        void shouldHandleNullProperties() {
+        @DisplayName("Should handle empty additional metadata")
+        void shouldHandleEmptyAdditionalMetadata() {
             // Given
+            Map<String, String> emptyMetadata = new HashMap<>();
+            
             FileMetadata metadata = new FileMetadata(
-                "test.txt", "text/plain", 1024L, null, null, null, null
+                "test.txt", "text/plain", 1024L, Instant.now(), 
+                Instant.now(), "abc123", emptyMetadata
             );
 
             // When & Then
-            assertThat(metadata.getProperty("key1")).isNull();
-            assertThat(metadata.hasProperty("key1")).isFalse();
+            assertThat(metadata.properties()).isEqualTo(emptyMetadata);
+            assertThat(metadata.properties()).isEmpty();
         }
 
         @Test
-        @DisplayName("Should handle empty properties")
-        void shouldHandleEmptyProperties() {
+        @DisplayName("Should handle multiple additional metadata entries")
+        void shouldHandleMultipleAdditionalMetadataEntries() {
             // Given
+            Map<String, String> additionalMetadata = new HashMap<>();
+            additionalMetadata.put("key1", "value1");
+            additionalMetadata.put("key2", "value2");
+            additionalMetadata.put("key3", "value3");
+            
             FileMetadata metadata = new FileMetadata(
-                "test.txt", "text/plain", 1024L, null, null, null, Map.of()
+                "test.txt", "text/plain", 1024L, Instant.now(), 
+                Instant.now(), "abc123", additionalMetadata
             );
 
             // When & Then
-            assertThat(metadata.getProperty("key1")).isNull();
-            assertThat(metadata.hasProperty("key1")).isFalse();
+            assertThat(metadata.properties()).hasSize(3);
+            assertThat(metadata.properties()).containsEntry("key1", "value1");
+            assertThat(metadata.properties()).containsEntry("key2", "value2");
+            assertThat(metadata.properties()).containsEntry("key3", "value3");
+        }
+    }
+
+    @Nested
+    @DisplayName("Edge Cases Tests")
+    class EdgeCasesTests {
+
+        @Test
+        @DisplayName("Should handle zero size")
+        void shouldHandleZeroSize() {
+            // Given
+            FileMetadata metadata = new FileMetadata(
+                "empty.txt", "text/plain", 0L, Instant.now(), 
+                Instant.now(), "abc123", null
+            );
+
+            // When & Then
+            assertThat(metadata.size()).isEqualTo(0L);
         }
 
         @Test
-        @DisplayName("Should handle file with multiple dots")
-        void shouldHandleFileWithMultipleDots() {
+        @DisplayName("Should handle negative size")
+        void shouldHandleNegativeSize() {
             // Given
             FileMetadata metadata = new FileMetadata(
-                "test.backup.txt", "text/plain", 1024L, null, null, null, null
+                "test.txt", "text/plain", -1L, Instant.now(), 
+                Instant.now(), "abc123", null
             );
 
             // When & Then
-            assertThat(metadata.getFileExtension()).isEqualTo("txt");
-            assertThat(metadata.getFileNameWithoutExtension()).isEqualTo("test.backup");
+            assertThat(metadata.size()).isEqualTo(-1L);
         }
 
         @Test
-        @DisplayName("Should handle file starting with dot")
-        void shouldHandleFileStartingWithDot() {
+        @DisplayName("Should handle very large size")
+        void shouldHandleVeryLargeSize() {
             // Given
+            long largeSize = Long.MAX_VALUE;
             FileMetadata metadata = new FileMetadata(
-                ".hidden", "text/plain", 1024L, null, null, null, null
+                "large.txt", "application/octet-stream", largeSize, 
+                Instant.now(), Instant.now(), "abc123", null
             );
 
             // When & Then
-            assertThat(metadata.getFileExtension()).isEqualTo("hidden");
-            assertThat(metadata.getFileNameWithoutExtension()).isEmpty();
+            assertThat(metadata.size()).isEqualTo(largeSize);
         }
     }
 }

@@ -1,6 +1,5 @@
 package io.github.base.starter.file.autoconfig;
 
-import io.github.base.starter.file.constants.FileStorageConstants;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 
@@ -21,7 +20,7 @@ public class AwsProperties {
     /**
      * AWS region.
      */
-    private String region = FileStorageConstants.DEFAULT_AWS_REGION;
+    private String region = "us-east-1";
     
     /**
      * AWS credentials configuration.

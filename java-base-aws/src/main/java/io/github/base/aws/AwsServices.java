@@ -3,10 +3,7 @@ package io.github.base.aws;
 import io.github.base.aws.api.config.AwsServiceConfig;
 import io.github.base.aws.spi.AwsServiceProvider;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.ServiceLoader;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -24,7 +21,7 @@ public final class AwsServices {
 
     private static final ConcurrentMap<String, AwsServiceProvider> PROVIDER_CACHE = new ConcurrentHashMap<>();
     private static final ConcurrentMap<String, Object> SERVICE_CACHE = new ConcurrentHashMap<>();
-    private static List<AwsServiceProvider> PROVIDERS;
+    private static volatile List<AwsServiceProvider> providers;
 
     private AwsServices() {
         // Utility class - prevent instantiation
@@ -36,14 +33,14 @@ public final class AwsServices {
      * @return list of available providers sorted by priority (highest first)
      */
     public static List<AwsServiceProvider> getProviders() {
-        if (PROVIDERS == null) {
+        if (providers == null) {
             synchronized (AwsServices.class) {
-                if (PROVIDERS == null) {
-                    PROVIDERS = loadProviders();
+                if (providers == null) {
+                    providers = loadProviders();
                 }
             }
         }
-        return new ArrayList<>(PROVIDERS);
+        return new ArrayList<>(providers);
     }
 
     /**
@@ -123,17 +120,16 @@ public final class AwsServices {
      * Gets the highest priority available AWS service instance.
      *
      * @param serviceName the name of the service
-     * @param config the service configuration
-     * @return the highest priority service instance or null if none available
+     * @param config      the service configuration
      * @throws IllegalStateException if no providers are available
      */
-    public static Object getBestService(String serviceName, AwsServiceConfig config) {
+    public static void getBestService(String serviceName, AwsServiceConfig config) {
         AwsServiceProvider provider = getBestProvider(serviceName);
         if (provider == null) {
             throw new IllegalStateException("No available AWS service providers found for: " + serviceName);
         }
 
-        return getService(serviceName, config);
+        getService(serviceName, config);
     }
 
     /**
@@ -222,7 +218,7 @@ public final class AwsServices {
     public static void clearCache() {
         PROVIDER_CACHE.clear();
         SERVICE_CACHE.clear();
-        PROVIDERS = null;
+        providers = null;
     }
 
     /**

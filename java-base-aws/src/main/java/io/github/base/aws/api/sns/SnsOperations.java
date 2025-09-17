@@ -1,6 +1,5 @@
 package io.github.base.aws.api.sns;
 
-
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;

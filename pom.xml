@@ -5,7 +5,7 @@
     <!-- Parent Information -->
     <groupId>io.github.tmshoangnam</groupId>
     <artifactId>java-base-parent</artifactId>
-    <version>1.0.5-SNAPSHOT</version>
+    <version>1.0.5</version>
     <url>http://www.example.com/example-application</url>
 
     <scm>
@@ -60,7 +60,7 @@
 
         <!-- Core Dependency Versions -->
         <resilience4j.version>2.2.0</resilience4j.version>
-        <nimbus-jose-jwt.version>9.37.3</nimbus-jose-jwt.version>
+        <nimbus-jose-jwt.version>9.47</nimbus-jose-jwt.version>
         <caffeine.version>3.1.8</caffeine.version>
         <micrometer.version>1.13.4</micrometer.version>
         <opentelemetry.version>1.39.0</opentelemetry.version>

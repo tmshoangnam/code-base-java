@@ -1,25 +1,24 @@
-# Java Base Starter File Storage
+# Java Base Starter File
 
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.tmshoangnam/java-base-starter-file.svg)](https://mvnrepository.com/artifact/io.github.tmshoangnam/java-base-starter-file)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Java Version](https://img.shields.io/badge/java-17%2B-orange.svg)](https://openjdk.java.net/)
+A Spring Boot starter for file storage and AWS services integration.
 
-A Spring Boot starter for file storage operations, providing auto-configuration and seamless integration with various storage providers including local filesystem, AWS S3, Google Cloud Storage, and Azure Blob Storage.
+## Overview
 
-## 🚀 Features
+This starter provides a comprehensive file storage solution with support for multiple storage providers and AWS services integration. It includes auto-configuration, decorators for resilience and observability, and a clean API for file operations.
 
-- **Auto-Configuration**: Zero-configuration setup with Spring Boot
-- **Multiple Providers**: Support for local, S3, GCS, and Azure storage
-- **Decorator Pattern**: Built-in decorators for caching, logging, metrics, and resilience
-- **Configuration Properties**: Externalized configuration via application properties
-- **Health Checks**: Built-in health indicators for storage providers
-- **Metrics**: Micrometer integration for monitoring
-- **Validation**: Comprehensive configuration validation
-- **Factory Pattern**: Flexible storage instance creation
+## Features
 
-## 📦 Installation
+- **Multiple Storage Providers**: Local, S3, GCS, Azure Blob Storage
+- **AWS Services Integration**: S3, SQS, SNS, Lambda, DynamoDB, Secrets Manager
+- **Resilience Patterns**: Circuit breaker, retry, time limiter
+- **Observability**: Metrics, logging, tracing
+- **Security**: Access control, audit logging, validation
+- **Caching**: Metadata and existence caching
+- **Auto-configuration**: Spring Boot auto-configuration
 
-### Maven
+## Quick Start
+
+### 1. Add Dependency
 
 ```xml
 <dependency>
@@ -29,493 +28,400 @@ A Spring Boot starter for file storage operations, providing auto-configuration 
 </dependency>
 ```
 
-### Gradle
-
-```gradle
-implementation 'io.github.tmshoangnam:java-base-starter-file:1.0.5-SNAPSHOT'
-```
-
-## 🏗️ Architecture
-
-### Core Components
-
-- **FileStorageAutoConfiguration**: Main auto-configuration class
-- **FileStorageProperties**: Configuration properties binding
-- **FileStorageFactory**: Factory for creating storage instances
-- **FileStorageConfigValidator**: Configuration validation
-- **Storage Providers**: Local, S3, GCS, and Azure implementations
-- **Decorators**: Caching, logging, metrics, and resilience decorators
-
-### Package Structure
-
-```
-io.github.base.starter.file
-├── autoconfig/            # Auto-configuration classes
-├── config/                # Configuration utilities
-├── constants/             # Constants and defaults
-├── decorators/            # Storage decorators
-├── factory/               # Factory classes
-├── impl/                  # Provider implementations
-│   ├── local/            # Local storage implementation
-│   ├── s3/               # S3 storage implementation
-│   ├── gcs/              # GCS storage implementation
-│   └── azure/            # Azure storage implementation
-└── util/                  # Utility classes
-```
-
-## 🔧 Usage
-
-### Basic Configuration
-
-Add the starter to your Spring Boot application and configure the storage provider:
+### 2. Configure Storage
 
 ```yaml
-# application.yml
 base:
   file:
     storage:
       enabled: true
-      default-provider: local
-      cache-enabled: true
-      metrics-enabled: true
-      cache-ttl-seconds: 300
-      max-cache-size: 1000
+      default-provider: s3
       providers:
         local:
-          enabled: true
-          cache-enabled: true
-          metrics-enabled: true
+          type: local
+          properties:
+            base-path: /tmp/files
         s3:
-          enabled: true
-          cache-enabled: true
-          metrics-enabled: true
-```
-
-### Using FileStorageManager
-
-```java
-import io.github.base.file.api.storage.FileStorageManager;
-import io.github.base.file.api.storage.FileStorage;
-import io.github.base.file.api.model.UploadResult;
-import io.github.base.file.api.model.DownloadResult;
-
-@RestController
-public class FileController {
-    
-    private final FileStorageManager fileStorageManager;
-    
-    public FileController(FileStorageManager fileStorageManager) {
-        this.fileStorageManager = fileStorageManager;
-    }
-    
-    @PostMapping("/upload")
-    public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
-        try {
-            String fileId = UUID.randomUUID().toString();
-            UploadResult result = fileStorageManager.upload(
-                fileId,
-                file.getBytes(),
-                file.getOriginalFilename(),
-                file.getContentType()
-            );
-            
-            if (result.isSuccess()) {
-                return ResponseEntity.ok("File uploaded: " + result.getLocation());
-            } else {
-                return ResponseEntity.badRequest().body("Upload failed: " + result.getErrorMessage());
-            }
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Error: " + e.getMessage());
-        }
-    }
-    
-    @GetMapping("/download/{fileId}")
-    public ResponseEntity<byte[]> downloadFile(@PathVariable String fileId) {
-        try {
-            DownloadResult<byte[]> result = fileStorageManager.download(fileId);
-            
-            if (result.isSuccess()) {
-                return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(result.getMetadata().getContentType()))
-                    .body(result.getContent());
-            } else {
-                return ResponseEntity.notFound().build();
-            }
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
-    }
-}
-```
-
-### Using Specific Storage Provider
-
-```java
-import io.github.base.file.api.storage.FileStorage;
-
-@Service
-public class FileService {
-    
-    private final FileStorage localStorage;
-    private final FileStorage s3Storage;
-    
-    public FileService(FileStorageManager fileStorageManager) {
-        this.localStorage = fileStorageManager.getStorage("local");
-        this.s3Storage = fileStorageManager.getStorage("s3");
-    }
-    
-    public void uploadToLocal(String fileId, byte[] content, String fileName, String contentType) {
-        localStorage.upload(fileId, content, fileName, contentType);
-    }
-    
-    public void uploadToS3(String fileId, byte[] content, String fileName, String contentType) {
-        s3Storage.upload(fileId, content, fileName, contentType);
-    }
-}
-```
-
-### Configuration Properties
-
-```yaml
-# application.yml
-base:
-  file:
-    storage:
-      # Global settings
-      enabled: true
-      default-provider: local
-      cache-enabled: true
-      metrics-enabled: true
-      cache-ttl-seconds: 300
-      max-cache-size: 1000
-      
-      # Provider-specific settings
-      providers:
-        local:
-          enabled: true
-          cache-enabled: true
-          metrics-enabled: true
-          resilient-enabled: true
-          secure-enabled: true
-          logging-enabled: true
-          configuration:
-            base-path: "/tmp/file-storage"
-            
-        s3:
-          enabled: true
-          cache-enabled: true
-          metrics-enabled: true
-          resilient-enabled: true
-          secure-enabled: true
-          logging-enabled: true
-          configuration:
-            bucket-name: "my-bucket"
-            region: "us-east-1"
-            
+          type: s3
+          properties:
+            bucket-name: my-bucket
+            region: us-east-1
         gcs:
-          enabled: true
-          cache-enabled: true
-          metrics-enabled: true
-          resilient-enabled: true
-          secure-enabled: true
-          logging-enabled: true
-          configuration:
-            bucket-name: "my-bucket"
-            project-id: "my-project"
-            
+          type: gcs
+          properties:
+            bucket-name: my-gcs-bucket
+            project-id: my-project
         azure:
-          enabled: true
-          cache-enabled: true
-          metrics-enabled: true
-          resilient-enabled: true
-          secure-enabled: true
-          logging-enabled: true
-          configuration:
-            container-name: "my-container"
-            account-name: "myaccount"
-```
-
-### AWS Configuration
-
-```yaml
-# application.yml
-base:
+          type: azure
+          properties:
+            container-name: my-container
+            connection-string: ${AZURE_STORAGE_CONNECTION_STRING}
   aws:
+    enabled: true
     region: us-east-1
     credentials:
       access-key-id: ${AWS_ACCESS_KEY_ID}
       secret-access-key: ${AWS_SECRET_ACCESS_KEY}
-      session-token: ${AWS_SESSION_TOKEN}
     s3:
-      enabled: true
-      bucket-name: my-bucket
-      region: us-east-1
+      default-bucket: my-bucket
+    sqs:
+      default-queue-url: https://sqs.us-east-1.amazonaws.com/123456789012/my-queue
+    sns:
+      default-topic-arn: arn:aws:sns:us-east-1:123456789012:my-topic
 ```
 
-### Health Checks
-
-The starter provides health indicators for storage providers:
-
-```yaml
-# application.yml
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics
-  endpoint:
-    health:
-      show-details: always
-```
-
-Access health information at `/actuator/health`:
-
-```json
-{
-  "status": "UP",
-  "components": {
-    "fileStorage": {
-      "status": "UP",
-      "details": {
-        "local": "UP",
-        "s3": "UP"
-      }
-    }
-  }
-}
-```
-
-### Metrics
-
-The starter integrates with Micrometer for metrics collection:
-
-```yaml
-# application.yml
-management:
-  metrics:
-    export:
-      prometheus:
-        enabled: true
-```
-
-Available metrics:
-- `file.storage.upload.count` - Upload operation count
-- `file.storage.download.count` - Download operation count
-- `file.storage.delete.count` - Delete operation count
-- `file.storage.operation.duration` - Operation duration
-- `file.storage.cache.hit.count` - Cache hit count
-- `file.storage.cache.miss.count` - Cache miss count
-
-### Custom Configuration
+### 3. Use in Your Code
 
 ```java
-@Configuration
-public class FileStorageConfig {
+@Service
+public class DocumentService {
     
-    @Bean
-    @ConfigurationProperties("base.file.storage")
-    public FileStorageProperties fileStorageProperties() {
-        return new FileStorageProperties();
+    private final FileStorage fileStorage;
+    private final SqsOperations sqsOperations;
+    
+    public DocumentService(FileStorage fileStorage, SqsOperations sqsOperations) {
+        this.fileStorage = fileStorage;
+        this.sqsOperations = sqsOperations;
     }
     
-    @Bean
-    public FileStorageFactory fileStorageFactory() {
-        return new FileStorageFactory();
+    @PostMapping("/upload")
+    public String uploadDocument(@RequestParam MultipartFile file) {
+        FileMetadata metadata = FileMetadata.of(
+            file.getOriginalFilename(),
+            file.getContentType(),
+            file.getSize()
+        );
+        
+        UploadResult result = fileStorage.upload(
+            generateFileId(),
+            file.getBytes(),
+            metadata
+        );
+        
+        if (result.success()) {
+            // Send notification via SQS
+            sqsOperations.sendMessage("document-uploaded-queue", Map.of(
+                "fileId", result.fileId(),
+                "location", result.location(),
+                "size", metadata.size()
+            ));
+            
+            return "Upload successful: " + result.location();
+        }
+        
+        return "Upload failed: " + result.errorMessage();
     }
     
-    @Bean
-    public FileStorageConfigValidator fileStorageConfigValidator() {
-        return new FileStorageConfigValidator();
+    @GetMapping("/download/{fileId}")
+    public ResponseEntity<byte[]> downloadDocument(@PathVariable String fileId) {
+        DownloadResult<byte[]> result = fileStorage.download(fileId, byte[].class);
+        
+        if (result.success()) {
+            return ResponseEntity.ok()
+                .header("Content-Type", result.metadata().contentType())
+                .header("Content-Disposition", "attachment; filename=\"" + result.metadata().fileName() + "\"")
+                .body(result.content());
+        }
+        
+        return ResponseEntity.notFound().build();
+    }
+    
+    private String generateFileId() {
+        return UUID.randomUUID().toString();
     }
 }
 ```
 
-### Custom Storage Provider
+## Configuration
+
+### File Storage Configuration
+
+| Property | Description | Default |
+|----------|-------------|---------|
+| `base.file.storage.enabled` | Enable file storage auto-configuration | `true` |
+| `base.file.storage.default-provider` | Default storage provider | `local` |
+| `base.file.storage.cache-enabled` | Enable metadata caching | `true` |
+| `base.file.storage.cache-ttl-seconds` | Cache TTL in seconds | `300` |
+| `base.file.storage.max-cache-size` | Maximum cache size | `1000` |
+| `base.file.storage.metrics-enabled` | Enable metrics collection | `true` |
+
+### AWS Configuration
+
+| Property | Description | Default |
+|----------|-------------|---------|
+| `base.aws.enabled` | Enable AWS services auto-configuration | `true` |
+| `base.aws.region` | AWS region | `us-east-1` |
+| `base.aws.credentials.access-key-id` | AWS access key ID | - |
+| `base.aws.credentials.secret-access-key` | AWS secret access key | - |
+| `base.aws.s3.default-bucket` | Default S3 bucket | - |
+| `base.aws.sqs.default-queue-url` | Default SQS queue URL | - |
+| `base.aws.sns.default-topic-arn` | Default SNS topic ARN | - |
+
+## Storage Providers
+
+### Local Storage
+
+```yaml
+base:
+  file:
+    storage:
+      providers:
+        local:
+          type: local
+          properties:
+            base-path: /tmp/files
+            create-directories: true
+            file-permissions: "644"
+            directory-permissions: "755"
+```
+
+### S3 Storage
+
+```yaml
+base:
+  file:
+    storage:
+      providers:
+        s3:
+          type: s3
+          properties:
+            bucket-name: my-bucket
+            region: us-east-1
+            endpoint: https://s3.amazonaws.com
+            path-style-access: false
+```
+
+### Google Cloud Storage
+
+```yaml
+base:
+  file:
+    storage:
+      providers:
+        gcs:
+          type: gcs
+          properties:
+            bucket-name: my-gcs-bucket
+            project-id: my-project
+            credentials-file: /path/to/credentials.json
+```
+
+### Azure Blob Storage
+
+```yaml
+base:
+  file:
+    storage:
+      providers:
+        azure:
+          type: azure
+          properties:
+            container-name: my-container
+            connection-string: ${AZURE_STORAGE_CONNECTION_STRING}
+```
+
+## AWS Services
+
+### S3 Operations
 
 ```java
-@Component
-public class CustomFileStorageProvider implements FileStorageProvider {
+@Autowired
+private S3Operations s3Operations;
+
+// Upload a file
+S3UploadResult result = s3Operations.uploadObject("my-bucket", "key", content, metadata);
+
+// Download a file
+S3DownloadResult<byte[]> result = s3Operations.downloadObject("my-bucket", "key", byte[].class);
+
+// Generate presigned URL
+String presignedUrl = s3Operations.generatePresignedUrl("my-bucket", "key", Duration.ofHours(1));
+```
+
+### SQS Operations
+
+```java
+@Autowired
+private SqsOperations sqsOperations;
+
+// Send a message
+sqsOperations.sendMessage("my-queue", "Hello, World!");
+
+// Receive messages
+List<SqsMessage> messages = sqsOperations.receiveMessages("my-queue", 10);
+
+// Delete a message
+sqsOperations.deleteMessage("my-queue", "receipt-handle");
+```
+
+### SNS Operations
+
+```java
+@Autowired
+private SnsOperations snsOperations;
+
+// Publish a message
+snsOperations.publishMessage("my-topic", "Hello, World!");
+
+// Create a subscription
+snsOperations.createSubscription("my-topic", "email", "user@example.com");
+```
+
+## Decorators
+
+The starter includes several decorators that can be applied to file storage operations:
+
+- **ResilientFileStorage**: Adds circuit breaker, retry, and time limiter patterns
+- **LoggingFileStorage**: Adds structured logging for all operations
+- **CachedFileStorage**: Adds metadata and existence caching
+- **SecureFileStorage**: Adds access control and validation
+- **MetricsFileStorage**: Adds metrics collection
+
+## Testing
+
+### Unit Tests
+
+```java
+@ExtendWith(MockitoExtension.class)
+class DocumentServiceTest {
     
-    @Override
-    public String getProviderName() {
-        return "custom";
+    @Mock
+    private FileStorage fileStorage;
+    
+    @Mock
+    private SqsOperations sqsOperations;
+    
+    @InjectMocks
+    private DocumentService documentService;
+    
+    @Test
+    void shouldUploadDocumentSuccessfully() {
+        // Given
+        MultipartFile file = mock(MultipartFile.class);
+        when(file.getOriginalFilename()).thenReturn("test.txt");
+        when(file.getContentType()).thenReturn("text/plain");
+        when(file.getBytes()).thenReturn("Hello, World!".getBytes());
+        
+        UploadResult uploadResult = new UploadResult(true, "file-id", "location", null);
+        when(fileStorage.upload(anyString(), any(byte[].class), any(FileMetadata.class)))
+            .thenReturn(uploadResult);
+        
+        // When
+        String result = documentService.uploadDocument(file);
+        
+        // Then
+        assertThat(result).contains("Upload successful");
+        verify(sqsOperations).sendMessage(eq("document-uploaded-queue"), any(Map.class));
     }
-    
-    @Override
-    public String getProviderDescription() {
-        return "Custom file storage provider";
-    }
-    
-    @Override
-    public String getProviderVersion() {
-        return "1.0.0";
-    }
-    
-    @Override
-    public boolean isAvailable() {
-        return true;
-    }
-    
-    @Override
-    public int getPriority() {
-        return 50;
-    }
-    
-    @Override
-    public FileStorage createStorage() {
-        return new CustomFileStorage();
-    }
-    
-    // ... implement other methods
 }
 ```
 
-## 🧪 Testing
-
-The starter includes comprehensive unit and integration tests with 80%+ code coverage.
-
-### Running Tests
-
-```bash
-# Run all tests
-mvn test
-
-# Run with coverage report
-mvn test jacoco:report
-
-# Run specific test class
-mvn test -Dtest=FileStorageAutoConfigurationTest
-```
-
-### Test Configuration
+### Integration Tests
 
 ```java
 @SpringBootTest
-@TestPropertySource(properties = {
-    "base.file.storage.enabled=true",
-    "base.file.storage.default-provider=local",
-    "base.file.storage.cache-enabled=true"
-})
+@Testcontainers
 class FileStorageIntegrationTest {
     
+    @Container
+    static LocalStackContainer localStack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:latest"))
+        .withServices(LocalStackContainer.Service.S3, LocalStackContainer.Service.SQS);
+    
     @Autowired
-    private FileStorageManager fileStorageManager;
+    private FileStorage fileStorage;
     
     @Test
-    void shouldUploadFile() {
-        // Test implementation
+    void shouldUploadAndDownloadFile() {
+        // Given
+        String fileId = "test-file.txt";
+        byte[] content = "Hello, World!".getBytes();
+        FileMetadata metadata = FileMetadata.of("test-file.txt", "text/plain", content.length);
+        
+        // When
+        UploadResult uploadResult = fileStorage.upload(fileId, content, metadata);
+        DownloadResult<byte[]> downloadResult = fileStorage.download(fileId, byte[].class);
+        
+        // Then
+        assertThat(uploadResult.success()).isTrue();
+        assertThat(downloadResult.success()).isTrue();
+        assertThat(downloadResult.content()).isEqualTo(content);
     }
 }
 ```
 
-## 📊 Monitoring and Observability
-
-### Health Indicators
-
-- **FileStorageHealthIndicator**: Overall storage health
-- **ProviderHealthIndicator**: Individual provider health
-- **CacheHealthIndicator**: Cache system health
+## Monitoring
 
 ### Metrics
 
-- **Operation Metrics**: Upload, download, delete counts
-- **Performance Metrics**: Operation duration and throughput
-- **Cache Metrics**: Hit rates and cache performance
-- **Error Metrics**: Failure rates and error types
+The starter provides various metrics for monitoring:
+
+- `file.storage.operations`: Operation counts by type
+- `file.storage.duration`: Operation durations
+- `file.storage.results`: Success/failure counts
+- `file.storage.size`: File sizes
+- `file.storage.list.size`: List operation result sizes
 
 ### Logging
 
-- **Structured Logging**: JSON-formatted logs
-- **Correlation IDs**: Request tracing across services
-- **Audit Logging**: Security and compliance logging
+Structured logging is provided for all operations with the following fields:
 
-## 🔒 Security
+- `operationId`: Unique operation identifier
+- `fileId`: File identifier
+- `operation`: Operation type
+- `duration`: Operation duration
+- `success`: Success/failure status
+- `error`: Error message (if applicable)
 
-- **Input Validation**: Comprehensive input validation
-- **Path Traversal Protection**: Prevents directory traversal attacks
-- **Content Type Validation**: Validates file types and content
-- **Access Control**: Role-based access control
-- **Audit Logging**: Comprehensive audit trail
+## Security
 
-## 🚀 Performance
+### Access Control
 
-- **Caching**: Built-in caching for metadata and files
-- **Async Operations**: Support for asynchronous operations
-- **Connection Pooling**: Efficient connection management
-- **Batch Operations**: Support for batch file operations
-- **Streaming**: Support for streaming large files
+The `SecureFileStorage` decorator provides:
 
-## 📝 Configuration Reference
+- Authentication checks
+- Role-based access control
+- File pattern validation
+- File size limits
+- Content type validation
 
-### FileStorageProperties
+### Audit Logging
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `base.file.storage.enabled` | boolean | true | Enable file storage auto-configuration |
-| `base.file.storage.default-provider` | string | local | Default storage provider |
-| `base.file.storage.cache-enabled` | boolean | true | Enable caching |
-| `base.file.storage.metrics-enabled` | boolean | true | Enable metrics collection |
-| `base.file.storage.cache-ttl-seconds` | long | 300 | Cache TTL in seconds |
-| `base.file.storage.max-cache-size` | int | 1000 | Maximum cache size |
+All file operations are logged for audit purposes with:
 
-### Provider Configuration
+- User information
+- Operation details
+- File identifiers
+- Timestamps
+- Success/failure status
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `base.file.storage.providers.{name}.enabled` | boolean | true | Enable specific provider |
-| `base.file.storage.providers.{name}.cache-enabled` | boolean | null | Override global cache setting |
-| `base.file.storage.providers.{name}.metrics-enabled` | boolean | null | Override global metrics setting |
-| `base.file.storage.providers.{name}.resilient-enabled` | boolean | true | Enable resilience features |
-| `base.file.storage.providers.{name}.secure-enabled` | boolean | true | Enable security features |
-| `base.file.storage.providers.{name}.logging-enabled` | boolean | true | Enable logging features |
+## Troubleshooting
 
-## 🤝 Contributing
+### Common Issues
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+1. **File not found**: Check if the file exists and you have the correct file ID
+2. **Permission denied**: Verify your AWS credentials and permissions
+3. **Storage provider not available**: Check the provider configuration and availability
+4. **Cache issues**: Clear the cache or check cache configuration
 
-### Development Setup
+### Debug Logging
 
-1. Clone the repository
-2. Install dependencies: `mvn install`
-3. Run tests: `mvn test`
-4. Build the project: `mvn package`
+Enable debug logging to see detailed operation information:
 
-### Code Style
+```yaml
+logging:
+  level:
+    io.github.base.starter.file: DEBUG
+    io.github.base.file: DEBUG
+```
 
-We follow the Google Java Style Guide with some customizations:
-- 4 spaces for indentation
-- Maximum line length: 120 characters
-- Use `@DisplayName` for test methods
-- Comprehensive Javadoc for public APIs
+## Contributing
 
-## 📄 License
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## License
 
-## 🆘 Support
-
-- **Documentation**: [Wiki](https://github.com/tmshoangnam/java-base-starter-file/wiki)
-- **Issues**: [GitHub Issues](https://github.com/tmshoangnam/java-base-starter-file/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/tmshoangnam/java-base-starter-file/discussions)
-
-## 🔄 Changelog
-
-See [CHANGELOG.md](CHANGELOG.md) for a detailed list of changes.
-
-## 🏷️ Versioning
-
-We use [Semantic Versioning](https://semver.org/) for version numbers:
-- **MAJOR**: Breaking changes
-- **MINOR**: New features (backward compatible)
-- **PATCH**: Bug fixes (backward compatible)
-
-## 🙏 Acknowledgments
-
-- Spring Boot for auto-configuration framework
-- Spring Cloud for configuration management
-- Micrometer for metrics collection
-- The Java community for feedback and contributions
-
----
-
-**Made with ❤️ by the Java Base Team**
+This project is licensed under the MIT License - see the LICENSE file for details.

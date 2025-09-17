@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Nested;
 import static org.assertj.core.api.Assertions.*;
 
 /**
- * Unit tests for FileType.
+ * Unit tests for FileType enum.
  *
  * @author java-base-team
  * @since 1.0.5-SNAPSHOT
@@ -16,17 +16,18 @@ import static org.assertj.core.api.Assertions.*;
 class FileTypeTest {
 
     @Nested
-    @DisplayName("Value Tests")
-    class ValueTests {
+    @DisplayName("Enum Values Tests")
+    class EnumValuesTests {
 
         @Test
-        @DisplayName("Should have correct enum values")
-        void shouldHaveCorrectEnumValues() {
+        @DisplayName("Should have exactly 3 enum values")
+        void shouldHaveExactlyThreeEnumValues() {
             // When
             FileType[] values = FileType.values();
 
             // Then
-            assertThat(values).containsExactly(
+            assertThat(values).hasSize(3);
+            assertThat(values).containsExactlyInAnyOrder(
                 FileType.FILE,
                 FileType.BYTE,
                 FileType.STREAM
@@ -34,12 +35,21 @@ class FileTypeTest {
         }
 
         @Test
+        @DisplayName("Should have correct enum names")
+        void shouldHaveCorrectEnumNames() {
+            // Then
+            assertThat(FileType.FILE.name()).isEqualTo("FILE");
+            assertThat(FileType.BYTE.name()).isEqualTo("BYTE");
+            assertThat(FileType.STREAM.name()).isEqualTo("STREAM");
+        }
+
+        @Test
         @DisplayName("Should have correct string representations")
         void shouldHaveCorrectStringRepresentations() {
-            // When & Then
-            assertThat(FileType.FILE.toString()).isEqualTo("FILE")
-                    .isEqualTo("BYTE")
-                    .isEqualTo("STREAM");
+            // Then
+            assertThat(FileType.FILE.toString()).isEqualTo("FILE");
+            assertThat(FileType.BYTE.toString()).isEqualTo("BYTE");
+            assertThat(FileType.STREAM.toString()).isEqualTo("STREAM");
         }
     }
 
@@ -57,19 +67,34 @@ class FileTypeTest {
         }
 
         @Test
-        @DisplayName("Should throw exception for invalid string")
-        void shouldThrowExceptionForInvalidString() {
+        @DisplayName("Should throw IllegalArgumentException for invalid string")
+        void shouldThrowIllegalArgumentExceptionForInvalidString() {
             // When & Then
             assertThatThrownBy(() -> FileType.valueOf("INVALID"))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("No enum constant");
         }
 
         @Test
-        @DisplayName("Should throw exception for null string")
-        void shouldThrowExceptionForNullString() {
+        @DisplayName("Should throw NullPointerException for null string")
+        void shouldThrowNullPointerExceptionForNullString() {
             // When & Then
             assertThatThrownBy(() -> FileType.valueOf(null))
                 .isInstanceOf(NullPointerException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("Ordinal Tests")
+    class OrdinalTests {
+
+        @Test
+        @DisplayName("Should have correct ordinals")
+        void shouldHaveCorrectOrdinals() {
+            // Then
+            assertThat(FileType.FILE.ordinal()).isEqualTo(0);
+            assertThat(FileType.BYTE.ordinal()).isEqualTo(1);
+            assertThat(FileType.STREAM.ordinal()).isEqualTo(2);
         }
     }
 
@@ -87,12 +112,12 @@ class FileTypeTest {
         }
 
         @Test
-        @DisplayName("Should not be equal to different enum")
-        void shouldNotBeEqualToDifferentEnum() {
+        @DisplayName("Should not be equal to different enum values")
+        void shouldNotBeEqualToDifferentEnumValues() {
             // When & Then
             assertThat(FileType.FILE).isNotEqualTo(FileType.BYTE);
+            assertThat(FileType.FILE).isNotEqualTo(FileType.STREAM);
             assertThat(FileType.BYTE).isNotEqualTo(FileType.STREAM);
-            assertThat(FileType.STREAM).isNotEqualTo(FileType.FILE);
         }
     }
 
@@ -112,8 +137,8 @@ class FileTypeTest {
         }
 
         @Test
-        @DisplayName("Should have different hashCode for different enums")
-        void shouldHaveDifferentHashCodeForDifferentEnums() {
+        @DisplayName("Should have different hashCodes for different enum values")
+        void shouldHaveDifferentHashCodesForDifferentEnumValues() {
             // When
             int fileHashCode = FileType.FILE.hashCode();
             int byteHashCode = FileType.BYTE.hashCode();
@@ -121,36 +146,8 @@ class FileTypeTest {
 
             // Then
             assertThat(fileHashCode).isNotEqualTo(byteHashCode);
+            assertThat(fileHashCode).isNotEqualTo(streamHashCode);
             assertThat(byteHashCode).isNotEqualTo(streamHashCode);
-            assertThat(streamHashCode).isNotEqualTo(fileHashCode);
-        }
-    }
-
-    @Nested
-    @DisplayName("Ordinal Tests")
-    class OrdinalTests {
-
-        @Test
-        @DisplayName("Should have correct ordinal values")
-        void shouldHaveCorrectOrdinalValues() {
-            // When & Then
-            assertThat(FileType.FILE.ordinal()).isZero();
-            assertThat(FileType.BYTE.ordinal()).isEqualTo(1);
-            assertThat(FileType.STREAM.ordinal()).isEqualTo(2);
-        }
-    }
-
-    @Nested
-    @DisplayName("Name Tests")
-    class NameTests {
-
-        @Test
-        @DisplayName("Should have correct name")
-        void shouldHaveCorrectName() {
-            // When & Then
-            assertThat(FileType.FILE.name()).isEqualTo("FILE");
-            assertThat(FileType.BYTE.name()).isEqualTo("BYTE");
-            assertThat(FileType.STREAM.name()).isEqualTo("STREAM");
         }
     }
 }

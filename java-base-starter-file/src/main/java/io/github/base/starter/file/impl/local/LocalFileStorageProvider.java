@@ -2,7 +2,6 @@ package io.github.base.starter.file.impl.local;
 
 import io.github.base.file.api.storage.FileStorage;
 import io.github.base.file.spi.FileStorageProvider;
-import io.github.base.starter.file.constants.FileStorageConstants;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,9 +27,9 @@ public class LocalFileStorageProvider implements FileStorageProvider {
     
     private static final Logger logger = LoggerFactory.getLogger(LocalFileStorageProvider.class);
     
-    private static final String PROVIDER_NAME = FileStorageConstants.LOCAL_PROVIDER_NAME;
+    private static final String PROVIDER_NAME = "local";
     private static final String BASE_PATH_PROPERTY = "base-path";
-    private static final String DEFAULT_BASE_PATH = FileStorageConstants.DEFAULT_LOCAL_BASE_PATH;
+    private static final String DEFAULT_BASE_PATH = System.getProperty("java.io.tmpdir") + "/file-storage";
     
     @Override
     public String getProviderName() {
@@ -44,7 +43,7 @@ public class LocalFileStorageProvider implements FileStorageProvider {
     
     @Override
     public String getProviderVersion() {
-        return FileStorageConstants.VERSION;
+        return "1.0.5-SNAPSHOT";
     }
     
     @Override
@@ -62,7 +61,7 @@ public class LocalFileStorageProvider implements FileStorageProvider {
     
     @Override
     public int getPriority() {
-        return FileStorageConstants.DEFAULT_LOCAL_PRIORITY; // High priority for local storage
+        return 100; // High priority for local storage
     }
     
     @Override

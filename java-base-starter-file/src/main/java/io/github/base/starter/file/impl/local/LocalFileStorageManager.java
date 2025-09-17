@@ -5,7 +5,6 @@ import io.github.base.file.api.storage.FileStorageManager;
 import io.github.base.file.api.model.FileMetadata;
 import io.github.base.file.api.model.UploadResult;
 import io.github.base.file.api.model.DownloadResult;
-import io.github.base.starter.file.constants.FileStorageConstants;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +49,7 @@ public class LocalFileStorageManager implements FileStorageManager {
             logger.info("Creating storage instance for provider: {}", name);
 
             // For local storage, we create a new instance with default configuration
-            if (FileStorageConstants.LOCAL_PROVIDER_NAME.equals(name)) {
+            if ("local".equals(name)) {
                 LocalFileStorageProvider provider = new LocalFileStorageProvider();
                 return provider.createStorage();
             }
@@ -72,17 +71,17 @@ public class LocalFileStorageManager implements FileStorageManager {
 
     @Override
     public Set<String> getAvailableProviders() {
-        return Set.of(FileStorageConstants.LOCAL_PROVIDER_NAME);
+        return Set.of("local");
     }
 
     @Override
     public boolean isProviderHealthy(String providerName) {
-        return FileStorageConstants.LOCAL_PROVIDER_NAME.equals(providerName);
+        return "local".equals(providerName);
     }
 
     @Override
     public Map<String, Boolean> getProviderHealthStatus() {
-        return Map.of(FileStorageConstants.LOCAL_PROVIDER_NAME, true);
+        return Map.of("local", true);
     }
 
     @Override
@@ -205,7 +204,7 @@ public class LocalFileStorageManager implements FileStorageManager {
         if (providerName == null || providerName.trim().isEmpty()) {
             throw new IllegalArgumentException("Provider name cannot be null or empty");
         }
-        if (!FileStorageConstants.LOCAL_PROVIDER_NAME.equals(providerName)) {
+        if (!"local".equals(providerName)) {
             throw new IllegalStateException("Only 'local' provider is supported");
         }
         // For local storage manager, we don't change the default provider

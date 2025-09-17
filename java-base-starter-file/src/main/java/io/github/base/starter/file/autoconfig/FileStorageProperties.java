@@ -1,6 +1,5 @@
 package io.github.base.starter.file.autoconfig;
 
-import io.github.base.starter.file.constants.FileStorageConstants;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 
@@ -21,7 +20,7 @@ public class FileStorageProperties {
     /**
      * Default storage provider to use.
      */
-    private String defaultProvider = FileStorageConstants.LOCAL_PROVIDER_NAME;
+    private String defaultProvider = "local";
     
     /**
      * Provider-specific configurations.
@@ -47,12 +46,12 @@ public class FileStorageProperties {
     /**
      * Cache TTL in seconds.
      */
-    private long cacheTtlSeconds = FileStorageConstants.DEFAULT_CACHE_TTL_SECONDS;
+    private long cacheTtlSeconds = 300;
     
     /**
      * Maximum cache size.
      */
-    private int maxCacheSize = FileStorageConstants.DEFAULT_MAX_CACHE_SIZE;
+    private int maxCacheSize = 1000;
     
     /**
      * Provider-specific configuration.

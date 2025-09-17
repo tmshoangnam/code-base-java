@@ -225,4 +225,9 @@ public record AwsCredentials(
                ", region='" + region + '\'' +
                '}';
     }
+
+    public static AwsCredentials ofDefault(String region2) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'ofDefault'");
+    }
 }

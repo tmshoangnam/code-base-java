@@ -1,0 +1,15 @@
+base:
+  file:
+    storage:
+      enabled: true
+      default-provider: s3
+      providers:
+        s3:
+          type: s3
+          enabled: true
+          priority: 100
+          properties:
+            bucket-name: ${AWS_S3_BUCKET_NAME:logidaily-bucket--apne1-az4--x-s3}
+            region: ${AWS_REGION:ap-northeast-1}
+            access-key-id: ${AWS_ACCESS_KEY_ID:AKIAQIUTXSYUMUR65VUK}
+            secret-access-key: ${AWS_SECRET_ACCESS_KEY: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}

@@ -2,7 +2,6 @@ package io.github.base.starter.file.impl.gcs;
 
 import io.github.base.file.api.storage.FileStorage;
 import io.github.base.file.spi.FileStorageProvider;
-import io.github.base.starter.file.constants.FileStorageConstants;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +25,7 @@ public class GcsFileStorageProvider implements FileStorageProvider {
     
     private static final Logger logger = LoggerFactory.getLogger(GcsFileStorageProvider.class);
     
-    private static final String PROVIDER_NAME = FileStorageConstants.GCS_PROVIDER_NAME;
+    private static final String PROVIDER_NAME = "gcs";
     private static final String BUCKET_NAME_PROPERTY = "bucket-name";
     private static final String PROJECT_ID_PROPERTY = "project-id";
     
@@ -42,7 +41,7 @@ public class GcsFileStorageProvider implements FileStorageProvider {
     
     @Override
     public String getProviderVersion() {
-        return FileStorageConstants.VERSION;
+        return "1.0.5-SNAPSHOT";
     }
     
     @Override
@@ -59,7 +58,7 @@ public class GcsFileStorageProvider implements FileStorageProvider {
     
     @Override
     public int getPriority() {
-        return FileStorageConstants.DEFAULT_CLOUD_PRIORITY; // Medium priority for GCS storage
+        return 50; // Medium priority for GCS storage
     }
     
     @Override

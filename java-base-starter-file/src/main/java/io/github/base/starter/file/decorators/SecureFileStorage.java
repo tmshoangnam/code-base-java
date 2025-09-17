@@ -14,6 +14,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+
 /**
  * Decorator that adds security controls to file storage operations.
  *
@@ -84,7 +85,7 @@ public class SecureFileStorage implements FileStorage {
         }
 
         // Validate input stream
-        validateInputStream(inputStream);
+        validateInputStream(inputStream, metadata);
 
         // Execute operation
         UploadResult result = delegate.upload(fileId, inputStream, metadata);
@@ -290,7 +291,6 @@ public class SecureFileStorage implements FileStorage {
      */
     private boolean checkPermission(String operation, String resource) {
         // TODO: Implement actual permission checking
-
         // For now, just log and return true
         logger.debug("Checking permission for operation: {} on resource: {}", operation, resource);
         return true;
@@ -334,9 +334,10 @@ public class SecureFileStorage implements FileStorage {
      * Validates an input stream before upload.
      *
      * @param inputStream the input stream to validate
+     * @param metadata the file metadata
      * @throws FileStorageException if validation fails
      */
-    private void validateInputStream(InputStream inputStream) throws FileStorageException {
+    private void validateInputStream(InputStream inputStream, FileMetadata metadata) throws FileStorageException {
         if (inputStream == null) {
             throw new FileStorageException("Invalid input stream: stream is null");
         }

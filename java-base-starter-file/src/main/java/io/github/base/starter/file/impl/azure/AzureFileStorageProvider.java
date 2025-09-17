@@ -2,7 +2,6 @@ package io.github.base.starter.file.impl.azure;
 
 import io.github.base.file.api.storage.FileStorage;
 import io.github.base.file.spi.FileStorageProvider;
-import io.github.base.starter.file.constants.FileStorageConstants;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +25,7 @@ public class AzureFileStorageProvider implements FileStorageProvider {
     
     private static final Logger logger = LoggerFactory.getLogger(AzureFileStorageProvider.class);
     
-    private static final String PROVIDER_NAME = FileStorageConstants.AZURE_PROVIDER_NAME;
+    private static final String PROVIDER_NAME = "azure";
     private static final String CONTAINER_NAME_PROPERTY = "container-name";
     private static final String CONNECTION_STRING_PROPERTY = "connection-string";
     
@@ -42,7 +41,7 @@ public class AzureFileStorageProvider implements FileStorageProvider {
     
     @Override
     public String getProviderVersion() {
-        return FileStorageConstants.VERSION;
+        return "1.0.5-SNAPSHOT";
     }
     
     @Override
@@ -59,7 +58,7 @@ public class AzureFileStorageProvider implements FileStorageProvider {
     
     @Override
     public int getPriority() {
-        return FileStorageConstants.DEFAULT_CLOUD_PRIORITY; // Medium priority for Azure storage
+        return 50; // Medium priority for Azure storage
     }
     
     @Override

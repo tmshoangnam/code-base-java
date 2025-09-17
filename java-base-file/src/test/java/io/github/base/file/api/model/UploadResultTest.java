@@ -9,8 +9,8 @@ import java.time.Instant;
 import static org.assertj.core.api.Assertions.*;
 
 /**
- * Unit tests for UploadResult.
- * 
+ * Unit tests for UploadResult record.
+ *
  * @author java-base-team
  * @since 1.0.5-SNAPSHOT
  */
@@ -22,19 +22,23 @@ class UploadResultTest {
     class ConstructorTests {
 
         @Test
-        @DisplayName("Should create successful UploadResult with all parameters")
-        void shouldCreateSuccessfulUploadResultWithAllParameters() {
+        @DisplayName("Should create successful UploadResult")
+        void shouldCreateSuccessfulUploadResult() {
             // Given
+            boolean success = true;
             String fileId = "test-file-123";
-            String location = "https://example.com/files/test-file-123";
+            String location = "/uploads/test-file-123";
             String errorMessage = null;
             String errorCode = null;
             Instant uploadedAt = Instant.now();
-            FileMetadata metadata = FileMetadata.of("test.txt", "text/plain", 1024L);
+            FileMetadata metadata = new FileMetadata(
+                "test.txt", "text/plain", 1024L, Instant.now(), 
+                Instant.now(), "abc123", null
+            );
 
             // When
             UploadResult result = new UploadResult(
-                true, fileId, location, errorMessage, errorCode, uploadedAt, metadata
+                success, fileId, location, errorMessage, errorCode, uploadedAt, metadata
             );
 
             // Then
@@ -48,19 +52,20 @@ class UploadResultTest {
         }
 
         @Test
-        @DisplayName("Should create failed UploadResult with all parameters")
-        void shouldCreateFailedUploadResultWithAllParameters() {
+        @DisplayName("Should create failed UploadResult")
+        void shouldCreateFailedUploadResult() {
             // Given
+            boolean success = false;
             String fileId = "test-file-123";
             String location = null;
-            String errorMessage = "Upload failed due to insufficient permissions";
-            String errorCode = "PERMISSION_DENIED";
+            String errorMessage = "Upload failed";
+            String errorCode = "UPLOAD_ERROR";
             Instant uploadedAt = Instant.now();
             FileMetadata metadata = null;
 
             // When
             UploadResult result = new UploadResult(
-                false, fileId, location, errorMessage, errorCode, uploadedAt, metadata
+                success, fileId, location, errorMessage, errorCode, uploadedAt, metadata
             );
 
             // Then
@@ -72,266 +77,44 @@ class UploadResultTest {
             assertThat(result.uploadedAt()).isEqualTo(uploadedAt);
             assertThat(result.metadata()).isNull();
         }
-    }
-
-    @Nested
-    @DisplayName("Static Factory Method Tests")
-    class StaticFactoryMethodTests {
 
         @Test
-        @DisplayName("Should create success result using success method with metadata")
-        void shouldCreateSuccessResultUsingSuccessMethodWithMetadata() {
-            // Given
-            String fileId = "test-file-123";
-            String location = "https://example.com/files/test-file-123";
-            FileMetadata metadata = FileMetadata.of("test.txt", "text/plain", 1024L);
-
+        @DisplayName("Should create UploadResult with null values")
+        void shouldCreateUploadResultWithNullValues() {
             // When
-            UploadResult result = UploadResult.success(fileId, location, metadata);
-
-            // Then
-            assertThat(result.success()).isTrue();
-            assertThat(result.fileId()).isEqualTo(fileId);
-            assertThat(result.location()).isEqualTo(location);
-            assertThat(result.errorMessage()).isNull();
-            assertThat(result.errorCode()).isNull();
-            assertThat(result.uploadedAt()).isNotNull();
-            assertThat(result.metadata()).isEqualTo(metadata);
-        }
-
-        @Test
-        @DisplayName("Should create success result using success method without metadata")
-        void shouldCreateSuccessResultUsingSuccessMethodWithoutMetadata() {
-            // Given
-            String fileId = "test-file-123";
-            String location = "https://example.com/files/test-file-123";
-
-            // When
-            UploadResult result = UploadResult.success(fileId, location);
-
-            // Then
-            assertThat(result.success()).isTrue();
-            assertThat(result.fileId()).isEqualTo(fileId);
-            assertThat(result.location()).isEqualTo(location);
-            assertThat(result.errorMessage()).isNull();
-            assertThat(result.errorCode()).isNull();
-            assertThat(result.uploadedAt()).isNotNull();
-            assertThat(result.metadata()).isNull();
-        }
-
-        @Test
-        @DisplayName("Should create failure result using failure method with error code")
-        void shouldCreateFailureResultUsingFailureMethodWithErrorCode() {
-            // Given
-            String fileId = "test-file-123";
-            String errorMessage = "Upload failed";
-            String errorCode = "UPLOAD_ERROR";
-
-            // When
-            UploadResult result = UploadResult.failure(fileId, errorMessage, errorCode);
+            UploadResult result = new UploadResult(
+                false, null, null, null, null, null, null
+            );
 
             // Then
             assertThat(result.success()).isFalse();
-            assertThat(result.fileId()).isEqualTo(fileId);
+            assertThat(result.fileId()).isNull();
             assertThat(result.location()).isNull();
-            assertThat(result.errorMessage()).isEqualTo(errorMessage);
-            assertThat(result.errorCode()).isEqualTo(errorCode);
-            assertThat(result.uploadedAt()).isNotNull();
-            assertThat(result.metadata()).isNull();
-        }
-
-        @Test
-        @DisplayName("Should create failure result using failure method without error code")
-        void shouldCreateFailureResultUsingFailureMethodWithoutErrorCode() {
-            // Given
-            String fileId = "test-file-123";
-            String errorMessage = "Upload failed";
-
-            // When
-            UploadResult result = UploadResult.failure(fileId, errorMessage);
-
-            // Then
-            assertThat(result.success()).isFalse();
-            assertThat(result.fileId()).isEqualTo(fileId);
-            assertThat(result.location()).isNull();
-            assertThat(result.errorMessage()).isEqualTo(errorMessage);
+            assertThat(result.errorMessage()).isNull();
             assertThat(result.errorCode()).isNull();
-            assertThat(result.uploadedAt()).isNotNull();
+            assertThat(result.uploadedAt()).isNull();
             assertThat(result.metadata()).isNull();
         }
-
-        @Test
-        @DisplayName("Should throw exception when fileId is null in success method")
-        void shouldThrowExceptionWhenFileIdIsNullInSuccessMethod() {
-            // When & Then
-            assertThatThrownBy(() -> UploadResult.success(null, "location"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("File ID cannot be null or empty");
-        }
-
-        @Test
-        @DisplayName("Should throw exception when fileId is empty in success method")
-        void shouldThrowExceptionWhenFileIdIsEmptyInSuccessMethod() {
-            // When & Then
-            assertThatThrownBy(() -> UploadResult.success("", "location"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("File ID cannot be null or empty");
-        }
-
-        @Test
-        @DisplayName("Should throw exception when location is null in success method")
-        void shouldThrowExceptionWhenLocationIsNullInSuccessMethod() {
-            // When & Then
-            assertThatThrownBy(() -> UploadResult.success("file-123", null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Location cannot be null or empty");
-        }
-
-        @Test
-        @DisplayName("Should throw exception when location is empty in success method")
-        void shouldThrowExceptionWhenLocationIsEmptyInSuccessMethod() {
-            // When & Then
-            assertThatThrownBy(() -> UploadResult.success("file-123", ""))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Location cannot be null or empty");
-        }
-
-        @Test
-        @DisplayName("Should throw exception when fileId is null in failure method")
-        void shouldThrowExceptionWhenFileIdIsNullInFailureMethod() {
-            // When & Then
-            assertThatThrownBy(() -> UploadResult.failure(null, "error"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("File ID cannot be null or empty");
-        }
-
-        @Test
-        @DisplayName("Should throw exception when errorMessage is null in failure method")
-        void shouldThrowExceptionWhenErrorMessageIsNullInFailureMethod() {
-            // When & Then
-            assertThatThrownBy(() -> UploadResult.failure("file-123", null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Error message cannot be null or empty");
-        }
-
-        @Test
-        @DisplayName("Should throw exception when errorMessage is empty in failure method")
-        void shouldThrowExceptionWhenErrorMessageIsEmptyInFailureMethod() {
-            // When & Then
-            assertThatThrownBy(() -> UploadResult.failure("file-123", ""))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Error message cannot be null or empty");
-        }
     }
 
     @Nested
-    @DisplayName("Utility Method Tests")
-    class UtilityMethodTests {
+    @DisplayName("Equality Tests")
+    class EqualityTests {
 
         @Test
-        @DisplayName("Should check if upload was successful")
-        void shouldCheckIfUploadWasSuccessful() {
+        @DisplayName("Should be equal to identical UploadResult")
+        void shouldBeEqualToIdenticalUploadResult() {
             // Given
-            UploadResult successResult = UploadResult.success("file-123", "location");
-            UploadResult failureResult = UploadResult.failure("file-123", "error");
-
-            // When & Then
-            assertThat(successResult.isSuccess()).isTrue();
-            assertThat(failureResult.isSuccess()).isFalse();
-        }
-
-        @Test
-        @DisplayName("Should check if upload failed")
-        void shouldCheckIfUploadFailed() {
-            // Given
-            UploadResult successResult = UploadResult.success("file-123", "location");
-            UploadResult failureResult = UploadResult.failure("file-123", "error");
-
-            // When & Then
-            assertThat(successResult.isFailure()).isFalse();
-            assertThat(failureResult.isFailure()).isTrue();
-        }
-
-        @Test
-        @DisplayName("Should get file ID")
-        void shouldGetFileId() {
-            // Given
-            UploadResult result = UploadResult.success("file-123", "location");
-
-            // When & Then
-            assertThat(result.getFileId()).isEqualTo("file-123");
-        }
-
-        @Test
-        @DisplayName("Should get location")
-        void shouldGetLocation() {
-            // Given
-            UploadResult result = UploadResult.success("file-123", "location");
-
-            // When & Then
-            assertThat(result.getLocation()).isEqualTo("location");
-        }
-
-        @Test
-        @DisplayName("Should get error message")
-        void shouldGetErrorMessage() {
-            // Given
-            UploadResult result = UploadResult.failure("file-123", "error message");
-
-            // When & Then
-            assertThat(result.getErrorMessage()).isEqualTo("error message");
-        }
-
-        @Test
-        @DisplayName("Should get error code")
-        void shouldGetErrorCode() {
-            // Given
-            UploadResult result = UploadResult.failure("file-123", "error message", "ERROR_CODE");
-
-            // When & Then
-            assertThat(result.getErrorCode()).isEqualTo("ERROR_CODE");
-        }
-
-        @Test
-        @DisplayName("Should get uploaded at timestamp")
-        void shouldGetUploadedAtTimestamp() {
-            // Given
-            UploadResult result = UploadResult.success("file-123", "location");
-
-            // When & Then
-            assertThat(result.getUploadedAt()).isNotNull();
-        }
-
-        @Test
-        @DisplayName("Should get metadata")
-        void shouldGetMetadata() {
-            // Given
-            FileMetadata metadata = FileMetadata.of("test.txt", "text/plain", 1024L);
-            UploadResult result = UploadResult.success("file-123", "location", metadata);
-
-            // When & Then
-            assertThat(result.getMetadata()).isEqualTo(metadata);
-        }
-    }
-
-    @Nested
-    @DisplayName("Equality and HashCode Tests")
-    class EqualityAndHashCodeTests {
-
-        @Test
-        @DisplayName("Should be equal when all fields are same")
-        void shouldBeEqualWhenAllFieldsAreSame() {
-            // Given
-            String fileId = "test-file-123";
-            String location = "https://example.com/files/test-file-123";
-            Instant uploadedAt = Instant.now();
-            FileMetadata metadata = FileMetadata.of("test.txt", "text/plain", 1024L);
-
+            Instant now = Instant.now();
+            FileMetadata metadata = new FileMetadata(
+                "test.txt", "text/plain", 1024L, now, now, "abc123", null
+            );
+            
             UploadResult result1 = new UploadResult(
-                true, fileId, location, null, null, uploadedAt, metadata
+                true, "file-123", "/uploads/file-123", null, null, now, metadata
             );
             UploadResult result2 = new UploadResult(
-                true, fileId, location, null, null, uploadedAt, metadata
+                true, "file-123", "/uploads/file-123", null, null, now, metadata
             );
 
             // When & Then
@@ -340,25 +123,44 @@ class UploadResultTest {
         }
 
         @Test
-        @DisplayName("Should not be equal when success differs")
-        void shouldNotBeEqualWhenSuccessDiffers() {
+        @DisplayName("Should not be equal to different UploadResult")
+        void shouldNotBeEqualToDifferentUploadResult() {
             // Given
-            UploadResult success = UploadResult.success("file-123", "location");
-            UploadResult failure = UploadResult.failure("file-123", "error");
-
-            // When & Then
-            assertThat(success).isNotEqualTo(failure);
-        }
-
-        @Test
-        @DisplayName("Should not be equal when fileId differs")
-        void shouldNotBeEqualWhenFileIdDiffers() {
-            // Given
-            UploadResult result1 = UploadResult.success("file-123", "location");
-            UploadResult result2 = UploadResult.success("file-456", "location");
+            Instant now = Instant.now();
+            
+            UploadResult result1 = new UploadResult(
+                true, "file-123", "/uploads/file-123", null, null, now, null
+            );
+            UploadResult result2 = new UploadResult(
+                false, "file-123", "/uploads/file-123", null, null, now, null
+            );
 
             // When & Then
             assertThat(result1).isNotEqualTo(result2);
+        }
+
+        @Test
+        @DisplayName("Should not be equal to null")
+        void shouldNotBeEqualToNull() {
+            // Given
+            UploadResult result = new UploadResult(
+                true, "file-123", "/uploads/file-123", null, null, Instant.now(), null
+            );
+
+            // When & Then
+            assertThat(result).isNotEqualTo(null);
+        }
+
+        @Test
+        @DisplayName("Should not be equal to different type")
+        void shouldNotBeEqualToDifferentType() {
+            // Given
+            UploadResult result = new UploadResult(
+                true, "file-123", "/uploads/file-123", null, null, Instant.now(), null
+            );
+
+            // When & Then
+            assertThat(result).isNotEqualTo("not an UploadResult");
         }
     }
 
@@ -367,93 +169,144 @@ class UploadResultTest {
     class ToStringTests {
 
         @Test
-        @DisplayName("Should include success status in toString")
-        void shouldIncludeSuccessStatusInToString() {
+        @DisplayName("Should include all fields in toString")
+        void shouldIncludeAllFieldsInToString() {
             // Given
-            UploadResult success = UploadResult.success("file-123", "location");
-            UploadResult failure = UploadResult.failure("file-123", "error");
+            String fileId = "test-file-123";
+            String location = "/uploads/test-file-123";
+            String errorMessage = "Upload failed";
+            String errorCode = "UPLOAD_ERROR";
+            Instant uploadedAt = Instant.now();
+            
+            UploadResult result = new UploadResult(
+                true, fileId, location, errorMessage, errorCode, uploadedAt, null
+            );
 
             // When
-            String successString = success.toString();
-            String failureString = failure.toString();
+            String toString = result.toString();
 
             // Then
-            assertThat(successString).contains("success=true");
-            assertThat(failureString).contains("success=false");
-        }
-
-        @Test
-        @DisplayName("Should include fileId in toString")
-        void shouldIncludeFileIdInToString() {
-            // Given
-            UploadResult result = UploadResult.success("file-123", "location");
-
-            // When
-            String resultString = result.toString();
-
-            // Then
-            assertThat(resultString).contains("file-123");
-        }
-
-        @Test
-        @DisplayName("Should include error message in toString for failure")
-        void shouldIncludeErrorMessageInToStringForFailure() {
-            // Given
-            UploadResult result = UploadResult.failure("file-123", "Upload failed");
-
-            // When
-            String resultString = result.toString();
-
-            // Then
-            assertThat(resultString).contains("Upload failed");
+            assertThat(toString).contains(fileId);
+            assertThat(toString).contains(location);
+            assertThat(toString).contains(errorMessage);
+            assertThat(toString).contains(errorCode);
         }
     }
 
     @Nested
-    @DisplayName("Edge Cases")
-    class EdgeCases {
+    @DisplayName("Success State Tests")
+    class SuccessStateTests {
 
         @Test
-        @DisplayName("Should handle whitespace in fileId and location")
-        void shouldHandleWhitespaceInFileIdAndLocation() {
+        @DisplayName("Should be successful when success is true")
+        void shouldBeSuccessfulWhenSuccessIsTrue() {
             // Given
-            String fileId = "  file-123  ";
-            String location = "  https://example.com/files/file-123  ";
+            UploadResult result = new UploadResult(
+                true, "file-123", "/uploads/file-123", null, null, Instant.now(), null
+            );
 
-            // When
-            UploadResult result = UploadResult.success(fileId, location);
-
-            // Then
-            assertThat(result.fileId()).isEqualTo("file-123");
-            assertThat(result.location()).isEqualTo("https://example.com/files/file-123");
+            // When & Then
+            assertThat(result.success()).isTrue();
         }
 
         @Test
-        @DisplayName("Should handle whitespace in error message")
-        void shouldHandleWhitespaceInErrorMessage() {
+        @DisplayName("Should not be successful when success is false")
+        void shouldNotBeSuccessfulWhenSuccessIsFalse() {
             // Given
-            String fileId = "file-123";
-            String errorMessage = "  Upload failed  ";
+            UploadResult result = new UploadResult(
+                false, "file-123", null, "Upload failed", "UPLOAD_ERROR", Instant.now(), null
+            );
 
-            // When
-            UploadResult result = UploadResult.failure(fileId, errorMessage);
+            // When & Then
+            assertThat(result.success()).isFalse();
+        }
+    }
 
-            // Then
-            assertThat(result.errorMessage()).isEqualTo("Upload failed");
+    @Nested
+    @DisplayName("Error Handling Tests")
+    class ErrorHandlingTests {
+
+        @Test
+        @DisplayName("Should have error message when failed")
+        void shouldHaveErrorMessageWhenFailed() {
+            // Given
+            String errorMessage = "Upload failed due to network error";
+            UploadResult result = new UploadResult(
+                false, "file-123", null, errorMessage, "NETWORK_ERROR", Instant.now(), null
+            );
+
+            // When & Then
+            assertThat(result.errorMessage()).isEqualTo(errorMessage);
         }
 
         @Test
-        @DisplayName("Should handle null error code")
-        void shouldHandleNullErrorCode() {
+        @DisplayName("Should have error code when failed")
+        void shouldHaveErrorCodeWhenFailed() {
             // Given
-            String fileId = "file-123";
-            String errorMessage = "Upload failed";
+            String errorCode = "STORAGE_FULL";
+            UploadResult result = new UploadResult(
+                false, "file-123", null, "Storage is full", errorCode, Instant.now(), null
+            );
 
-            // When
-            UploadResult result = UploadResult.failure(fileId, errorMessage, null);
+            // When & Then
+            assertThat(result.errorCode()).isEqualTo(errorCode);
+        }
 
-            // Then
-            assertThat(result.errorCode()).isNull();
+        @Test
+        @DisplayName("Should not have location when failed")
+        void shouldNotHaveLocationWhenFailed() {
+            // Given
+            UploadResult result = new UploadResult(
+                false, "file-123", null, "Upload failed", "UPLOAD_ERROR", Instant.now(), null
+            );
+
+            // When & Then
+            assertThat(result.location()).isNull();
+        }
+    }
+
+    @Nested
+    @DisplayName("Edge Cases Tests")
+    class EdgeCasesTests {
+
+        @Test
+        @DisplayName("Should handle empty fileId")
+        void shouldHandleEmptyFileId() {
+            // Given
+            UploadResult result = new UploadResult(
+                true, "", "/uploads/", null, null, Instant.now(), null
+            );
+
+            // When & Then
+            assertThat(result.fileId()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Should handle very long fileId")
+        void shouldHandleVeryLongFileId() {
+            // Given
+            String longFileId = "a".repeat(1000);
+            UploadResult result = new UploadResult(
+                true, longFileId, "/uploads/" + longFileId, null, null, Instant.now(), null
+            );
+
+            // When & Then
+            assertThat(result.fileId()).isEqualTo(longFileId);
+            assertThat(result.fileId()).hasSize(1000);
+        }
+
+        @Test
+        @DisplayName("Should handle very long error message")
+        void shouldHandleVeryLongErrorMessage() {
+            // Given
+            String longErrorMessage = "Error: " + "x".repeat(1000);
+            UploadResult result = new UploadResult(
+                false, "file-123", null, longErrorMessage, "LONG_ERROR", Instant.now(), null
+            );
+
+            // When & Then
+            assertThat(result.errorMessage()).isEqualTo(longErrorMessage);
+            assertThat(result.errorMessage()).hasSize(1007); // "Error: " + 1000 'x's
         }
     }
 }

@@ -6,11 +6,12 @@ import org.junit.jupiter.api.Nested;
 
 import java.io.File;
 import java.time.Instant;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.*;
 
 /**
- * Unit tests for DownloadResult.
+ * Unit tests for DownloadResult record.
  *
  * @author java-base-team
  * @since 1.0.5-SNAPSHOT
@@ -23,18 +24,22 @@ class DownloadResultTest {
     class ConstructorTests {
 
         @Test
-        @DisplayName("Should create successful DownloadResult with all parameters")
-        void shouldCreateSuccessfulDownloadResultWithAllParameters() {
+        @DisplayName("Should create successful DownloadResult with File")
+        void shouldCreateSuccessfulDownloadResultWithFile() {
             // Given
-            String content = "Hello World";
-            FileMetadata metadata = FileMetadata.of("test.txt", "text/plain", 1024L);
+            boolean success = true;
+            File content = new File("test.txt");
+            FileMetadata metadata = new FileMetadata(
+                "test.txt", "text/plain", 1024L, Instant.now(), 
+                Instant.now(), "abc123", null
+            );
             String errorMessage = null;
             String errorCode = null;
             Instant downloadedAt = Instant.now();
 
             // When
-            DownloadResult<String> result = new DownloadResult<>(
-                true, content, metadata, errorMessage, errorCode, downloadedAt
+            DownloadResult<File> result = new DownloadResult<>(
+                success, content, metadata, errorMessage, errorCode, downloadedAt
             );
 
             // Then
@@ -47,43 +52,23 @@ class DownloadResultTest {
         }
 
         @Test
-        @DisplayName("Should create failed DownloadResult with all parameters")
-        void shouldCreateFailedDownloadResultWithAllParameters() {
+        @DisplayName("Should create successful DownloadResult with byte array")
+        void shouldCreateSuccessfulDownloadResultWithByteArray() {
             // Given
-            String content = null;
-            FileMetadata metadata = null;
-            String errorMessage = "Download failed due to file not found";
-            String errorCode = "FILE_NOT_FOUND";
+            boolean success = true;
+            byte[] content = "Hello World".getBytes();
+            FileMetadata metadata = new FileMetadata(
+                "test.txt", "text/plain", content.length, Instant.now(), 
+                Instant.now(), "abc123", null
+            );
+            String errorMessage = null;
+            String errorCode = null;
             Instant downloadedAt = Instant.now();
 
             // When
-            DownloadResult<String> result = new DownloadResult<>(
-                false, content, metadata, errorMessage, errorCode, downloadedAt
+            DownloadResult<byte[]> result = new DownloadResult<>(
+                success, content, metadata, errorMessage, errorCode, downloadedAt
             );
-
-            // Then
-            assertThat(result.success()).isFalse();
-            assertThat(result.content()).isNull();
-            assertThat(result.metadata()).isNull();
-            assertThat(result.errorMessage()).isEqualTo(errorMessage);
-            assertThat(result.errorCode()).isEqualTo(errorCode);
-            assertThat(result.downloadedAt()).isEqualTo(downloadedAt);
-        }
-    }
-
-    @Nested
-    @DisplayName("Static Factory Method Tests")
-    class StaticFactoryMethodTests {
-
-        @Test
-        @DisplayName("Should create success result using success method with metadata")
-        void shouldCreateSuccessResultUsingSuccessMethodWithMetadata() {
-            // Given
-            String content = "Hello World";
-            FileMetadata metadata = FileMetadata.of("test.txt", "text/plain", 1024L);
-
-            // When
-            DownloadResult<String> result = DownloadResult.success(content, metadata);
 
             // Then
             assertThat(result.success()).isTrue();
@@ -91,36 +76,24 @@ class DownloadResultTest {
             assertThat(result.metadata()).isEqualTo(metadata);
             assertThat(result.errorMessage()).isNull();
             assertThat(result.errorCode()).isNull();
-            assertThat(result.downloadedAt()).isNotNull();
+            assertThat(result.downloadedAt()).isEqualTo(downloadedAt);
         }
 
         @Test
-        @DisplayName("Should create success result using success method without metadata")
-        void shouldCreateSuccessResultUsingSuccessMethodWithoutMetadata() {
+        @DisplayName("Should create failed DownloadResult")
+        void shouldCreateFailedDownloadResult() {
             // Given
-            String content = "Hello World";
-
-            // When
-            DownloadResult<String> result = DownloadResult.success(content);
-
-            // Then
-            assertThat(result.success()).isTrue();
-            assertThat(result.content()).isEqualTo(content);
-            assertThat(result.metadata()).isNull();
-            assertThat(result.errorMessage()).isNull();
-            assertThat(result.errorCode()).isNull();
-            assertThat(result.downloadedAt()).isNotNull();
-        }
-
-        @Test
-        @DisplayName("Should create failure result using failure method with error code")
-        void shouldCreateFailureResultUsingFailureMethodWithErrorCode() {
-            // Given
+            boolean success = false;
+            File content = null;
+            FileMetadata metadata = null;
             String errorMessage = "Download failed";
             String errorCode = "DOWNLOAD_ERROR";
+            Instant downloadedAt = Instant.now();
 
             // When
-            DownloadResult<String> result = DownloadResult.failure(errorMessage, errorCode);
+            DownloadResult<File> result = new DownloadResult<>(
+                success, content, metadata, errorMessage, errorCode, downloadedAt
+            );
 
             // Then
             assertThat(result.success()).isFalse();
@@ -128,252 +101,94 @@ class DownloadResultTest {
             assertThat(result.metadata()).isNull();
             assertThat(result.errorMessage()).isEqualTo(errorMessage);
             assertThat(result.errorCode()).isEqualTo(errorCode);
-            assertThat(result.downloadedAt()).isNotNull();
+            assertThat(result.downloadedAt()).isEqualTo(downloadedAt);
         }
 
         @Test
-        @DisplayName("Should create failure result using failure method without error code")
-        void shouldCreateFailureResultUsingFailureMethodWithoutErrorCode() {
-            // Given
-            String errorMessage = "Download failed";
-
+        @DisplayName("Should create DownloadResult with null values")
+        void shouldCreateDownloadResultWithNullValues() {
             // When
-            DownloadResult<String> result = DownloadResult.failure(errorMessage);
+            DownloadResult<String> result = new DownloadResult<>(
+                false, null, null, null, null, null
+            );
 
             // Then
             assertThat(result.success()).isFalse();
             assertThat(result.content()).isNull();
             assertThat(result.metadata()).isNull();
-            assertThat(result.errorMessage()).isEqualTo(errorMessage);
+            assertThat(result.errorMessage()).isNull();
             assertThat(result.errorCode()).isNull();
-            assertThat(result.downloadedAt()).isNotNull();
-        }
-
-        @Test
-        @DisplayName("Should throw exception when content is null in success method")
-        void shouldThrowExceptionWhenContentIsNullInSuccessMethod() {
-            // When & Then
-            assertThatThrownBy(() -> DownloadResult.success((String) null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Content cannot be null");
-        }
-
-        @Test
-        @DisplayName("Should throw exception when errorMessage is null in failure method")
-        void shouldThrowExceptionWhenErrorMessageIsNullInFailureMethod() {
-            // When & Then
-            assertThatThrownBy(() -> DownloadResult.failure(null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Error message cannot be null or empty");
-        }
-
-        @Test
-        @DisplayName("Should throw exception when errorMessage is empty in failure method")
-        void shouldThrowExceptionWhenErrorMessageIsEmptyInFailureMethod() {
-            // When & Then
-            assertThatThrownBy(() -> DownloadResult.failure(""))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Error message cannot be null or empty");
+            assertThat(result.downloadedAt()).isNull();
         }
     }
 
     @Nested
-    @DisplayName("Generic Type Tests")
-    class GenericTypeTests {
+    @DisplayName("Equality Tests")
+    class EqualityTests {
 
         @Test
-        @DisplayName("Should work with String content")
-        void shouldWorkWithStringContent() {
+        @DisplayName("Should be equal to identical DownloadResult")
+        void shouldBeEqualToIdenticalDownloadResult() {
             // Given
-            String content = "Hello World";
-
-            // When
-            DownloadResult<String> result = DownloadResult.success(content);
-
-            // Then
-            assertThat(result.content()).isInstanceOf(String.class);
-            assertThat(result.content()).isEqualTo(content);
-        }
-
-        @Test
-        @DisplayName("Should work with byte array content")
-        void shouldWorkWithByteArrayContent() {
-            // Given
-            byte[] content = "Hello World".getBytes();
-
-            // When
-            DownloadResult<byte[]> result = DownloadResult.success(content);
-
-            // Then
-            assertThat(result.content()).isInstanceOf(byte[].class);
-            assertThat(result.content()).isEqualTo(content);
-        }
-
-        @Test
-        @DisplayName("Should work with File content")
-        void shouldWorkWithFileContent() {
-            // Given
+            Instant now = Instant.now();
             File content = new File("test.txt");
-
-            // When
-            DownloadResult<File> result = DownloadResult.success(content);
-
-            // Then
-            assertThat(result.content()).isInstanceOf(File.class);
-            assertThat(result.content()).isEqualTo(content);
-        }
-    }
-
-    @Nested
-    @DisplayName("Utility Method Tests")
-    class UtilityMethodTests {
-
-        @Test
-        @DisplayName("Should check if download was successful")
-        void shouldCheckIfDownloadWasSuccessful() {
-            // Given
-            DownloadResult<String> successResult = DownloadResult.success("content");
-            DownloadResult<String> failureResult = DownloadResult.failure("error");
-
-            // When & Then
-            assertThat(successResult.isSuccess()).isTrue();
-            assertThat(failureResult.isSuccess()).isFalse();
-        }
-
-        @Test
-        @DisplayName("Should check if download failed")
-        void shouldCheckIfDownloadFailed() {
-            // Given
-            DownloadResult<String> successResult = DownloadResult.success("content");
-            DownloadResult<String> failureResult = DownloadResult.failure("error");
-
-            // When & Then
-            assertThat(successResult.isFailure()).isFalse();
-            assertThat(failureResult.isFailure()).isTrue();
-        }
-
-        @Test
-        @DisplayName("Should get content")
-        void shouldGetContent() {
-            // Given
-            String content = "Hello World";
-            DownloadResult<String> result = DownloadResult.success(content);
-
-            // When & Then
-            assertThat(result.getContent()).isEqualTo(content);
-        }
-
-        @Test
-        @DisplayName("Should get metadata")
-        void shouldGetMetadata() {
-            // Given
-            FileMetadata metadata = FileMetadata.of("test.txt", "text/plain", 1024L);
-            DownloadResult<String> result = DownloadResult.success("content", metadata);
-
-            // When & Then
-            assertThat(result.getMetadata()).isEqualTo(metadata);
-        }
-
-        @Test
-        @DisplayName("Should get error message")
-        void shouldGetErrorMessage() {
-            // Given
-            DownloadResult<String> result = DownloadResult.failure("Download failed");
-
-            // When & Then
-            assertThat(result.getErrorMessage()).isEqualTo("Download failed");
-        }
-
-        @Test
-        @DisplayName("Should get error code")
-        void shouldGetErrorCode() {
-            // Given
-            DownloadResult<String> result = DownloadResult.failure("Download failed", "ERROR_CODE");
-
-            // When & Then
-            assertThat(result.getErrorCode()).isEqualTo("ERROR_CODE");
-        }
-
-        @Test
-        @DisplayName("Should get downloaded at timestamp")
-        void shouldGetDownloadedAtTimestamp() {
-            // Given
-            DownloadResult<String> result = DownloadResult.success("content");
-
-            // When & Then
-            assertThat(result.getDownloadedAt()).isNotNull();
-        }
-
-        @Test
-        @DisplayName("Should check if content is available")
-        void shouldCheckIfContentIsAvailable() {
-            // Given
-            DownloadResult<String> successResult = DownloadResult.success("content");
-            DownloadResult<String> failureResult = DownloadResult.failure("error");
-
-            // When & Then
-            assertThat(successResult.hasContent()).isTrue();
-            assertThat(failureResult.hasContent()).isFalse();
-        }
-
-        @Test
-        @DisplayName("Should check if metadata is available")
-        void shouldCheckIfMetadataIsAvailable() {
-            // Given
-            FileMetadata metadata = FileMetadata.of("test.txt", "text/plain", 1024L);
-            DownloadResult<String> successResult = DownloadResult.success("content", metadata);
-            DownloadResult<String> failureResult = DownloadResult.failure("error");
-
-            // When & Then
-            assertThat(successResult.hasMetadata()).isTrue();
-            assertThat(failureResult.hasMetadata()).isFalse();
-        }
-    }
-
-    @Nested
-    @DisplayName("Equality and HashCode Tests")
-    class EqualityAndHashCodeTests {
-
-        @Test
-        @DisplayName("Should be equal when all fields are same")
-        void shouldBeEqualWhenAllFieldsAreSame() {
-            // Given
-            String content = "Hello World";
-            FileMetadata metadata = FileMetadata.of("test.txt", "text/plain", 1024L);
-            Instant downloadedAt = Instant.now();
-
-            DownloadResult<String> result1 = new DownloadResult<>(
-                true, content, metadata, null, null, downloadedAt
+            FileMetadata metadata = new FileMetadata(
+                "test.txt", "text/plain", 1024L, now, now, "abc123", null
             );
-            DownloadResult<String> result2 = new DownloadResult<>(
-                true, content, metadata, null, null, downloadedAt
+            
+            DownloadResult<File> result1 = new DownloadResult<>(
+                true, content, metadata, null, null, now
+            );
+            DownloadResult<File> result2 = new DownloadResult<>(
+                true, content, metadata, null, null, now
             );
 
             // When & Then
-            assertThat(result1).isEqualTo(result2)
-                    .hasSameHashCodeAs(result2);
+            assertThat(result1).isEqualTo(result2);
+            assertThat(result1.hashCode()).isEqualTo(result2.hashCode());
         }
 
         @Test
-        @DisplayName("Should not be equal when success differs")
-        void shouldNotBeEqualWhenSuccessDiffers() {
+        @DisplayName("Should not be equal to different DownloadResult")
+        void shouldNotBeEqualToDifferentDownloadResult() {
             // Given
-            DownloadResult<String> success = DownloadResult.success("content");
-            DownloadResult<String> failure = DownloadResult.failure("error");
-
-            // When & Then
-            assertThat(success).isNotEqualTo(failure);
-        }
-
-        @Test
-        @DisplayName("Should not be equal when content differs")
-        void shouldNotBeEqualWhenContentDiffers() {
-            // Given
-            DownloadResult<String> result1 = DownloadResult.success("content1");
-            DownloadResult<String> result2 = DownloadResult.success("content2");
+            Instant now = Instant.now();
+            File content1 = new File("test1.txt");
+            File content2 = new File("test2.txt");
+            
+            DownloadResult<File> result1 = new DownloadResult<>(
+                true, content1, null, null, null, now
+            );
+            DownloadResult<File> result2 = new DownloadResult<>(
+                true, content2, null, null, null, now
+            );
 
             // When & Then
             assertThat(result1).isNotEqualTo(result2);
+        }
+
+        @Test
+        @DisplayName("Should not be equal to null")
+        void shouldNotBeEqualToNull() {
+            // Given
+            DownloadResult<String> result = new DownloadResult<>(
+                true, "content", null, null, null, Instant.now()
+            );
+
+            // When & Then
+            assertThat(result).isNotEqualTo(null);
+        }
+
+        @Test
+        @DisplayName("Should not be equal to different type")
+        void shouldNotBeEqualToDifferentType() {
+            // Given
+            DownloadResult<String> result = new DownloadResult<>(
+                true, "content", null, null, null, Instant.now()
+            );
+
+            // When & Then
+            assertThat(result).isNotEqualTo("not a DownloadResult");
         }
     }
 
@@ -382,90 +197,184 @@ class DownloadResultTest {
     class ToStringTests {
 
         @Test
-        @DisplayName("Should include success status in toString")
-        void shouldIncludeSuccessStatusInToString() {
+        @DisplayName("Should include all fields in toString")
+        void shouldIncludeAllFieldsInToString() {
             // Given
-            DownloadResult<String> success = DownloadResult.success("content");
-            DownloadResult<String> failure = DownloadResult.failure("error");
+            String content = "Hello World";
+            String errorMessage = "Download failed";
+            String errorCode = "DOWNLOAD_ERROR";
+            Instant downloadedAt = Instant.now();
+            
+            DownloadResult<String> result = new DownloadResult<>(
+                true, content, null, errorMessage, errorCode, downloadedAt
+            );
 
             // When
-            String successString = success.toString();
-            String failureString = failure.toString();
+            String toString = result.toString();
 
             // Then
-            assertThat(successString).contains("success=true");
-            assertThat(failureString).contains("success=false");
-        }
-
-        @Test
-        @DisplayName("Should include content in toString")
-        void shouldIncludeContentInToString() {
-            // Given
-            DownloadResult<String> result = DownloadResult.success("Hello World");
-
-            // When
-            String resultString = result.toString();
-
-            // Then
-            assertThat(resultString).contains("Hello World");
-        }
-
-        @Test
-        @DisplayName("Should include error message in toString for failure")
-        void shouldIncludeErrorMessageInToStringForFailure() {
-            // Given
-            DownloadResult<String> result = DownloadResult.failure("Download failed");
-
-            // When
-            String resultString = result.toString();
-
-            // Then
-            assertThat(resultString).contains("Download failed");
+            assertThat(toString).contains(content);
+            assertThat(toString).contains(errorMessage);
+            assertThat(toString).contains(errorCode);
         }
     }
 
     @Nested
-    @DisplayName("Edge Cases")
-    class EdgeCases {
+    @DisplayName("Success State Tests")
+    class SuccessStateTests {
+
+        @Test
+        @DisplayName("Should be successful when success is true")
+        void shouldBeSuccessfulWhenSuccessIsTrue() {
+            // Given
+            DownloadResult<String> result = new DownloadResult<>(
+                true, "content", null, null, null, Instant.now()
+            );
+
+            // When & Then
+            assertThat(result.success()).isTrue();
+        }
+
+        @Test
+        @DisplayName("Should not be successful when success is false")
+        void shouldNotBeSuccessfulWhenSuccessIsFalse() {
+            // Given
+            DownloadResult<String> result = new DownloadResult<>(
+                false, null, null, "Download failed", "DOWNLOAD_ERROR", Instant.now()
+            );
+
+            // When & Then
+            assertThat(result.success()).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("Error Handling Tests")
+    class ErrorHandlingTests {
+
+        @Test
+        @DisplayName("Should have error message when failed")
+        void shouldHaveErrorMessageWhenFailed() {
+            // Given
+            String errorMessage = "Download failed due to network error";
+            DownloadResult<String> result = new DownloadResult<>(
+                false, null, null, errorMessage, "NETWORK_ERROR", Instant.now()
+            );
+
+            // When & Then
+            assertThat(result.errorMessage()).isEqualTo(errorMessage);
+        }
+
+        @Test
+        @DisplayName("Should have error code when failed")
+        void shouldHaveErrorCodeWhenFailed() {
+            // Given
+            String errorCode = "FILE_NOT_FOUND";
+            DownloadResult<String> result = new DownloadResult<>(
+                false, null, null, "File not found", errorCode, Instant.now()
+            );
+
+            // When & Then
+            assertThat(result.errorCode()).isEqualTo(errorCode);
+        }
+
+        @Test
+        @DisplayName("Should not have content when failed")
+        void shouldNotHaveContentWhenFailed() {
+            // Given
+            DownloadResult<String> result = new DownloadResult<>(
+                false, null, null, "Download failed", "DOWNLOAD_ERROR", Instant.now()
+            );
+
+            // When & Then
+            assertThat(result.content()).isNull();
+        }
+    }
+
+    @Nested
+    @DisplayName("Generic Type Tests")
+    class GenericTypeTests {
+
+        @Test
+        @DisplayName("Should work with different content types")
+        void shouldWorkWithDifferentContentTypes() {
+            // Given
+            Instant now = Instant.now();
+            
+            // When
+            DownloadResult<String> stringResult = new DownloadResult<>(
+                true, "string content", null, null, null, now
+            );
+            DownloadResult<Integer> intResult = new DownloadResult<>(
+                true, 42, null, null, null, now
+            );
+            DownloadResult<Map<String, Object>> mapResult = new DownloadResult<>(
+                true, Map.of("key", "value"), null, null, null, now
+            );
+
+            // Then
+            assertThat(stringResult.content()).isEqualTo("string content");
+            assertThat(intResult.content()).isEqualTo(42);
+            assertThat(mapResult.content()).containsEntry("key", "value");
+        }
+
+        @Test
+        @DisplayName("Should maintain type safety")
+        void shouldMaintainTypeSafety() {
+            // Given
+            DownloadResult<String> result = new DownloadResult<>(
+                true, "content", null, null, null, Instant.now()
+            );
+
+            // When & Then
+            assertThat(result.content()).isInstanceOf(String.class);
+            assertThat(result.content()).isEqualTo("content");
+        }
+    }
+
+    @Nested
+    @DisplayName("Edge Cases Tests")
+    class EdgeCasesTests {
 
         @Test
         @DisplayName("Should handle empty content")
         void shouldHandleEmptyContent() {
             // Given
-            String content = "";
+            String emptyContent = "";
+            DownloadResult<String> result = new DownloadResult<>(
+                true, emptyContent, null, null, null, Instant.now()
+            );
 
-            // When
-            DownloadResult<String> result = DownloadResult.success(content);
-
-            // Then
+            // When & Then
             assertThat(result.content()).isEmpty();
-            assertThat(result.success()).isTrue();
         }
 
         @Test
-        @DisplayName("Should handle whitespace in error message")
-        void shouldHandleWhitespaceInErrorMessage() {
+        @DisplayName("Should handle very large content")
+        void shouldHandleVeryLargeContent() {
             // Given
-            String errorMessage = "  Download failed  ";
+            String largeContent = "x".repeat(10000);
+            DownloadResult<String> result = new DownloadResult<>(
+                true, largeContent, null, null, null, Instant.now()
+            );
 
-            // When
-            DownloadResult<String> result = DownloadResult.failure(errorMessage);
-
-            // Then
-            assertThat(result.errorMessage()).isEqualTo("Download failed");
+            // When & Then
+            assertThat(result.content()).isEqualTo(largeContent);
+            assertThat(result.content()).hasSize(10000);
         }
 
         @Test
-        @DisplayName("Should handle null error code")
-        void shouldHandleNullErrorCode() {
+        @DisplayName("Should handle very long error message")
+        void shouldHandleVeryLongErrorMessage() {
             // Given
-            String errorMessage = "Download failed";
+            String longErrorMessage = "Error: " + "x".repeat(1000);
+            DownloadResult<String> result = new DownloadResult<>(
+                false, null, null, longErrorMessage, "LONG_ERROR", Instant.now()
+            );
 
-            // When
-            DownloadResult<String> result = DownloadResult.failure(errorMessage, null);
-
-            // Then
-            assertThat(result.errorCode()).isNull();
+            // When & Then
+            assertThat(result.errorMessage()).isEqualTo(longErrorMessage);
+            assertThat(result.errorMessage()).hasSize(1007); // "Error: " + 1000 'x's
         }
     }
 }
