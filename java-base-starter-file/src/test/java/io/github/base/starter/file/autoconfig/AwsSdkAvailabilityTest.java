@@ -69,3 +69,4 @@ class AwsSdkAvailabilityTest {
         assertThat(provider.isAvailable()).isTrue();
     }
 }
+

@@ -32,20 +32,16 @@ import java.util.Objects;
  *
  * <p><strong>Example Usage:</strong>
  * <pre>{@code
- * // Log business event
+ * // Static usage
  * StructuredLogger.logBusinessEvent(
  *     "req-12345",
  *     "USER_LOGIN",
  *     Map.of("userId", "user123", "ipAddress", "192.168.1.1")
  * );
  *
- * // Log error
- * StructuredLogger.logError(
- *     "req-12345",
- *     "Failed to process payment",
- *     exception,
- *     Map.of("orderId", "order456", "amount", 99.99)
- * );
+ * // Instance usage
+ * StructuredLogger logger = StructuredLoggerFactory.getLogger(MyClass.class);
+ * logger.info("Processing request", Map.of("requestId", "req-123"));
  * }</pre>
  *
  * @since 1.0.0
@@ -54,9 +50,15 @@ import java.util.Objects;
 public final class StructuredLogger {
 
     private static final Logger logger = LoggerFactory.getLogger(StructuredLogger.class);
+    private final Logger delegate;
 
     private StructuredLogger() {
         // Utility class - prevent instantiation
+        this.delegate = logger;
+    }
+    
+    StructuredLogger(Logger delegate) {
+        this.delegate = delegate;
     }
 
     /**
@@ -225,6 +227,84 @@ public final class StructuredLogger {
             // Always clear MDC to prevent context leakage
             clearMDC();
         }
+    }
+
+    // Instance methods for convenience
+
+    /**
+     * Logs an informational message.
+     *
+     * @param message the message
+     */
+    public void info(String message) {
+        delegate.info(message);
+    }
+
+    /**
+     * Logs an informational message with parameters.
+     *
+     * @param message the message
+     * @param args the arguments
+     */
+    public void info(String message, Object... args) {
+        delegate.info(message, args);
+    }
+
+    /**
+     * Logs a warning message.
+     *
+     * @param message the message
+     */
+    public void warn(String message) {
+        delegate.warn(message);
+    }
+
+    /**
+     * Logs a warning message with parameters.
+     *
+     * @param message the message
+     * @param args the arguments
+     */
+    public void warn(String message, Object... args) {
+        delegate.warn(message, args);
+    }
+
+    /**
+     * Logs an error message.
+     *
+     * @param message the message
+     */
+    public void error(String message) {
+        delegate.error(message);
+    }
+
+    /**
+     * Logs an error message with parameters.
+     *
+     * @param message the message
+     * @param args the arguments
+     */
+    public void error(String message, Object... args) {
+        delegate.error(message, args);
+    }
+
+    /**
+     * Logs a debug message.
+     *
+     * @param message the message
+     */
+    public void debug(String message) {
+        delegate.debug(message);
+    }
+
+    /**
+     * Logs a debug message with parameters.
+     *
+     * @param message the message
+     * @param args the arguments
+     */
+    public void debug(String message, Object... args) {
+        delegate.debug(message, args);
     }
 
     /**

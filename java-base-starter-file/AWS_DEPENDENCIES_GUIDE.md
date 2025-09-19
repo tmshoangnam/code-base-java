@@ -137,3 +137,4 @@ AWS SDK sẽ tự động include các dependencies cần thiết.
 ## Kết luận
 
 Sau khi thêm AWS SDK dependencies, lỗi "Provider is not available: s3" sẽ biến mất và S3 storage sẽ hoạt động bình thường.
+

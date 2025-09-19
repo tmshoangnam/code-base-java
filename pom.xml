@@ -5,14 +5,13 @@
     <!-- Parent Information -->
     <groupId>io.github.tmshoangnam</groupId>
     <artifactId>java-base-parent</artifactId>
-    <version>1.0.5</version>
+    <version>1.0.5-SNAPSHOT</version>
     <url>http://www.example.com/example-application</url>
 
     <scm>
         <connection>scm:git:git@github.com:tmshoangnam/code-base-java.git</connection>
         <developerConnection>scm:git:git@github.com:tmshoangnam/code-base-java.git</developerConnection>
         <url>https://github.com/tmshoangnam/code-base-java</url>
-        <tag>java-base-parent-1.0.3-SNAPSHOT</tag>
     </scm>
 
     <packaging>pom</packaging>
@@ -71,6 +70,10 @@
         <redis.version>3.2.1</redis.version>
         <lettuce.version>6.3.2.RELEASE</lettuce.version>
         <jackson.version>2.17.2</jackson.version>
+
+        <!-- QR Code & Image Processing Versions -->
+        <zxing.version>3.5.3</zxing.version>
+        <commons-imaging.version>1.0.0-alpha6</commons-imaging.version>
 
         <!-- Testing Versions -->
         <junit-jupiter.version>5.10.2</junit-jupiter.version>

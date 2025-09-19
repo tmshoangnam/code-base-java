@@ -192,4 +192,56 @@ public final class ValidationUtils {
     public static Validator getValidator() {
         return VALIDATOR;
     }
+
+    /**
+     * Validates that a string is not null or blank.
+     *
+     * @param value the value to validate
+     * @param message the error message
+     * @throws IllegalArgumentException if value is null or blank
+     */
+    public static void requireNonBlank(String value, String message) {
+        if (value == null || value.trim().isEmpty()) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
+    /**
+     * Validates that an object is not null.
+     *
+     * @param value the value to validate
+     * @param message the error message
+     * @throws IllegalArgumentException if value is null
+     */
+    public static void requireNonNull(Object value, String message) {
+        if (value == null) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
+    /**
+     * Validates that a number is positive.
+     *
+     * @param value the value to validate
+     * @param message the error message
+     * @throws IllegalArgumentException if value is not positive
+     */
+    public static void requirePositive(int value, String message) {
+        if (value <= 0) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
+    /**
+     * Validates that a number is non-negative.
+     *
+     * @param value the value to validate
+     * @param message the error message
+     * @throws IllegalArgumentException if value is negative
+     */
+    public static void requireNonNegative(int value, String message) {
+        if (value < 0) {
+            throw new IllegalArgumentException(message);
+        }
+    }
 }

@@ -5,7 +5,7 @@
     <parent>
         <groupId>io.github.tmshoangnam</groupId>
         <artifactId>java-base-parent</artifactId>
-        <version>1.0.5</version>
+        <version>1.0.5-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -70,6 +70,29 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- QR Code Dependencies -->
+        <!-- ZXing Core for QR Code generation and decoding -->
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+            <version>${zxing.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>javase</artifactId>
+            <version>${zxing.version}</version>
+            <optional>true</optional>
+        </dependency>
+        
+        <!-- Image processing dependencies -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-imaging</artifactId>
+            <version>${commons-imaging.version}</version>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Testing Dependencies -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -89,6 +112,19 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        
+        <!-- Hibernate Validator for test scope -->
+        <dependency>
+            <groupId>org.hibernate.validator</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.expressly</groupId>
+            <artifactId>expressly</artifactId>
+            <version>5.0.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

@@ -150,3 +150,4 @@ INFO  - Using fallback storage provider: local
 ## Kết luận
 
 Sau khi thêm AWS SDK dependencies và cấu hình đúng, S3 storage sẽ hoạt động bình thường và không còn fallback sang Local storage nữa.
+
