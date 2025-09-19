@@ -109,8 +109,8 @@ BOM module import `spring-boot-dependencies` và khai báo versions cho:
 ### Properties
 ```xml
 <properties>
-    <maven.compiler.source>17</maven.compiler.source>
-    <maven.compiler.target>17</maven.compiler.target>
+    <maven.compiler.source>21</maven.compiler.source>
+    <maven.compiler.target>21</maven.compiler.target>
 </properties>
 ```
 

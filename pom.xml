@@ -38,19 +38,21 @@
         <module>java-base-core</module>
         <module>java-base-security</module>
         <module>java-base-cache</module>
+        <module>java-base-report</module>
         <module>java-base-observability</module>
         <module>java-base-file</module>
         <module>java-base-aws</module>
         <module>java-base-starter</module>
         <module>java-base-starter-cache</module>
         <module>java-base-starter-security</module>
+        <module>java-base-starter-report</module>
         <module>java-base-starter-file</module>
     </modules>
 
     <!-- Properties -->
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 

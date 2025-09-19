@@ -16,8 +16,8 @@
     <url>http://www.example.com/example-application</url>
     <!-- BOM Configuration -->
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
     </properties>
 
     <!-- Dependency Management -->
@@ -58,6 +58,17 @@
             <dependency>
                 <groupId>io.github.tmshoangnam</groupId>
                 <artifactId>java-base-starter-cache</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <!-- Internal Modules for Report -->
+            <dependency>
+                <groupId>io.github.tmshoangnam</groupId>
+                <artifactId>java-base-report</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.tmshoangnam</groupId>
+                <artifactId>java-base-starter-report</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <!-- Internal Modules for File -->
