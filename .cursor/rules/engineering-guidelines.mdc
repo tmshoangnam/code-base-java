@@ -82,7 +82,7 @@ Mục tiêu: đảm bảo **consistency, maintainability, scalability** và **de
 ---
 
 ## 6. Coding Convention
-- **Java 17+**.  
+- **Java 21+**.  
 - Theo **Google Java Style Guide**, custom rules:  
   - Indent 4 spaces.  
   - Max line length: 120 chars.  

@@ -145,7 +145,7 @@ public class CustomSecurityProvider implements SecurityProvider {
 
 ## Dependencies
 
-- Java 17+
+- Java 21+
 - SLF4J API
 - Jakarta Validation API
 - Nimbus JOSE JWT (optional)

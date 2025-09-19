@@ -238,7 +238,7 @@ class DocumentService {
 	• Backward compatibility check (Japicmp / Revapi).
 
 ✅ Standards
-	• Java 17+
+	• Java 21+
 	• Javadoc đầy đủ cho public API.
 	• Static utils: final class + private constructor.
 	• Không phụ thuộc Spring trong core.
